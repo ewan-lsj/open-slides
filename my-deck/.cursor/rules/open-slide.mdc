@@ -1,0 +1,18 @@
+---
+description: open-slide slide authoring rules and skill routing
+alwaysApply: true
+---
+
+# open-slide
+
+The deck workspace lives in `my-deck/`. `cd my-deck` before running npm scripts; paths like `slides/` and `node_modules/.open-slide/current.json` are relative to `my-deck/`.
+
+Author slides as React components under `my-deck/slides/<id>/index.tsx`. Read `AGENTS.md` for hard rules and which `.cursor/skills/` workflow to use.
+
+- New deck → `create-slide` skill
+- Inspector `@slide-comment` markers → `apply-comments` skill
+- New theme → `create-theme` skill
+- "This page" / "this element" without a name → `current-slide` skill (read `node_modules/.open-slide/current.json`)
+- Any slide code edit → `slide-authoring` skill first
+
+Do not modify `package.json`, `open-slide.config.ts`, or slides you were not asked to touch. No new dependencies.
