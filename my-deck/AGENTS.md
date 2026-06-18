@@ -38,3 +38,12 @@ npm run sync:skills
 Then re-copy or re-apply Cursor adaptations to `.cursor/skills/` — `sync:skills` writes to `.agents/skills/` and `.claude/skills/` (Claude Code format), not `.cursor/skills/`.
 
 `npm run dev` detects drift on startup and offers to sync. Preview changes with `npm exec open-slide sync:skills --dry-run`.
+
+## Cursor Cloud specific instructions
+
+All commands run from `my-deck/` (the deck workspace). Standard scripts live in `package.json` and `README.md`: `npm run dev` (dev server), `npm run build` (static build, also serves as the typecheck — there is no separate lint script), `npm run preview`.
+
+- **`npm run dev` blocks on an interactive skills-drift prompt** (`Skills out of date … Sync now? (Y/n)`) when the bundled `@open-slide/core` skills differ from `.cursor/skills/`. In a non-interactive/automated context use `npm exec open-slide dev -- --no-skills-check` (or answer `n`) so startup doesn't hang. Do **not** accept the sync — it rewrites `.agents/`/`.claude/` skill copies, not `.cursor/`.
+- Dev server defaults to `http://localhost:5173/`; override with `--port`. The home page lists every folder under `slides/`; click a deck to view/navigate pages (Arrow keys / PageUp / PageDown, `F` for fullscreen).
+- `npm run build` writes to a repo-root `dist/` (the deck's parent), not `my-deck/dist/`; the verbose `../../../../../dist/...` paths in build output are expected.
+- Hot reload picks up new/edited `slides/<id>/index.tsx` files live — no restart needed to see a new deck.
