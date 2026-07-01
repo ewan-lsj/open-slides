@@ -16,6 +16,16 @@ type Target = { slideId: string; index: number };
 const sessionCache = new Map<string, string>();
 const cacheKey = (slideId: string, index: number) => `${slideId}:${index}`;
 
+export function notesWithSessionCache(
+  slideId: string,
+  notes: (string | undefined)[] | undefined,
+  pageCount: number,
+): (string | undefined)[] {
+  return Array.from({ length: pageCount }, (_, index) => {
+    return sessionCache.get(cacheKey(slideId, index)) ?? notes?.[index];
+  });
+}
+
 // Remap the per-target cache after a reorder. `order[i]` is the original
 // page index that lands at new position `i`, matching the contract used by
 // the `/__slides/:id/reorder` endpoint.

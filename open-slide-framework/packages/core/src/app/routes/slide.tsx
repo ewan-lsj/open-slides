@@ -61,7 +61,10 @@ import { exportSlideAsHtml } from '../lib/export-html';
 import { exportSlideAsPdf, isSafari } from '../lib/export-pdf';
 import { exportSlideAsImagePptx } from '../lib/export-pptx';
 import { exportSlideAsPptx } from '../lib/export-pptx-native';
-import { remapNotesSessionCacheAfterReorder } from '../lib/inspector/use-notes';
+import {
+  notesWithSessionCache,
+  remapNotesSessionCacheAfterReorder,
+} from '../lib/inspector/use-notes';
 import type { SlideModule } from '../lib/sdk';
 import { usePrefersReducedMotion } from '../lib/use-prefers-reduced-motion';
 import { useSlideModule } from '../lib/use-slide-module';
@@ -476,19 +479,25 @@ export function Slide() {
       ),
       { id: toastId, duration: Infinity },
     );
+    let failed = false;
     try {
-      await exportSlideAsPptx(slide, slideId, (progress) => {
+      const exportSlide = {
+        ...slide,
+        notes: notesWithSessionCache(slideId, slide.notes, pages.length),
+      };
+      await exportSlideAsPptx(exportSlide, slideId, (progress) => {
         toast.custom(() => <PptxProgressToast progress={progress} />, {
           id: toastId,
           duration: Infinity,
         });
       });
     } catch (err) {
+      failed = true;
       console.error('[open-slide] editable pptx export failed', err);
       toast.error(t.slide.pptxExportFailed, { id: toastId, duration: 4000 });
     } finally {
       setExporting(false);
-      toast.dismiss(toastId);
+      if (!failed) toast.dismiss(toastId);
     }
   };
 

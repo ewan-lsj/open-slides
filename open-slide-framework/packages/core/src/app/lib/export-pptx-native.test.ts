@@ -28,14 +28,34 @@ describe('editable PPTX export', () => {
     const baseStyle = {
       mixBlendMode: 'normal',
       backdropFilter: 'none',
+      borderTopLeftRadius: '0px',
+      clipPath: 'none',
+      opacity: '1',
+      overflow: 'visible',
+      overflowX: 'visible',
+      overflowY: 'visible',
       transform: 'none',
     } as CSSStyleDeclaration;
+    const div = { tagName: 'DIV', children: [] } as unknown as Element;
     expect(requiresAtomicRaster({ tagName: 'SVG' } as Element, baseStyle)).toBe(true);
-    expect(requiresAtomicRaster({ tagName: 'DIV' } as Element, baseStyle)).toBe(false);
+    expect(requiresAtomicRaster(div, baseStyle)).toBe(false);
     expect(
-      requiresAtomicRaster({ tagName: 'DIV' } as Element, {
+      requiresAtomicRaster(div, {
         ...baseStyle,
         transform: 'matrix(0, 1, -1, 0, 0, 0)',
+      }),
+    ).toBe(true);
+    expect(
+      requiresAtomicRaster(div, {
+        ...baseStyle,
+        transform: 'matrix(2, 0, 0, 2, 0, 0)',
+      }),
+    ).toBe(true);
+    expect(
+      requiresAtomicRaster({ tagName: 'DIV', children: [{}] } as unknown as Element, {
+        ...baseStyle,
+        borderTopLeftRadius: '20px',
+        overflow: 'hidden',
       }),
     ).toBe(true);
   });

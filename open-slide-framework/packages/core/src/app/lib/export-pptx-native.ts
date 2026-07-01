@@ -41,6 +41,8 @@ export type NativeSceneElement =
       italic: boolean;
       align: 'left' | 'center' | 'right' | 'justify';
       valign: 'top' | 'middle' | 'bottom';
+      charSpacing?: number;
+      lineSpacing?: number;
     }
   | {
       kind: 'image';
@@ -101,7 +103,6 @@ export async function exportSlideAsPptx(
     });
     const blob = await buildNativePptx(scenes, slide.meta?.title ?? slideId);
     downloadBlob(blob, `${slideId}.pptx`);
-  } finally {
     onProgress?.({
       phase: 'done',
       current: total,
@@ -109,6 +110,7 @@ export async function exportSlideAsPptx(
       percent: 100,
       fallbackCount,
     });
+  } finally {
     capture.dispose();
   }
 }
@@ -206,7 +208,7 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
         const shapeType = element.radius > 0 ? pptx.ShapeType.roundRect : pptx.ShapeType.rect;
         slide.addShape(shapeType, {
           ...position,
-          rectRadius: element.radius * PX_TO_IN,
+          rectRadius: normalizedRadius(element.radius, element.bounds),
           fill: element.fill
             ? { color: element.fill.color, transparency: element.fill.transparency }
             : { color: 'FFFFFF', transparency: 100 },
@@ -232,6 +234,8 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
           italic: element.italic,
           align: element.align,
           valign: element.valign,
+          charSpacing: element.charSpacing,
+          lineSpacing: element.lineSpacing,
         });
       } else {
         slide.addImage({
@@ -304,15 +308,61 @@ export function parseCssColor(value: string): Color | undefined {
   };
 }
 
+function resolveCssColor(value: string): Color | undefined {
+  const parsed = parseCssColor(value);
+  if (parsed || typeof document === 'undefined') return parsed;
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext('2d');
+  if (!context) return undefined;
+  try {
+    context.clearRect(0, 0, 1, 1);
+    context.fillStyle = value;
+    context.fillRect(0, 0, 1, 1);
+    const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data;
+    if (alpha === 0) return undefined;
+    return {
+      color: [red, green, blue]
+        .map((channel) => channel.toString(16).padStart(2, '0'))
+        .join('')
+        .toUpperCase(),
+      transparency: 100 - (alpha / 255) * 100,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 export function requiresAtomicRaster(element: Element, style: CSSStyleDeclaration): boolean {
   if (ATOMIC_RASTER_TAGS.has(element.tagName)) return true;
   if (style.mixBlendMode !== 'normal' || style.backdropFilter !== 'none') return true;
+  const radius = Number.parseFloat(style.borderTopLeftRadius) || 0;
+  if (element.tagName === 'IMG' && radius > 0) return true;
+  if (
+    (style.clipPath && style.clipPath !== 'none') ||
+    (radius > 0 &&
+      (style.overflow === 'hidden' ||
+        style.overflowX === 'hidden' ||
+        style.overflowY === 'hidden') &&
+      element.children.length > 0)
+  ) {
+    return true;
+  }
+  const opacity = Number.parseFloat(style.opacity);
+  if (Number.isFinite(opacity) && opacity < 1 && element.children.length > 0) return true;
   const transform = style.transform;
   if (!transform || transform === 'none') return false;
   const matrix = transform.match(/^matrix\(([^)]+)\)$/);
   if (!matrix) return true;
   const values = matrix[1].split(',').map(Number);
-  return values.length !== 6 || Math.abs(values[1]) > 0.0001 || Math.abs(values[2]) > 0.0001;
+  return (
+    values.length !== 6 ||
+    Math.abs(values[0] - 1) > 0.0001 ||
+    Math.abs(values[1]) > 0.0001 ||
+    Math.abs(values[2]) > 0.0001 ||
+    Math.abs(values[3] - 1) > 0.0001
+  );
 }
 
 function mountPages(slide: SlideModule): {
@@ -411,9 +461,9 @@ function shapeFromElement(
   frameRect: DOMRect,
 ): NativeSceneElement | undefined {
   const style = getComputedStyle(element);
-  const fill = parseCssColor(style.backgroundColor);
+  const fill = resolveCssColor(style.backgroundColor);
   const borderWidth = Number.parseFloat(style.borderTopWidth);
-  const lineColor = parseCssColor(style.borderTopColor);
+  const lineColor = resolveCssColor(style.borderTopColor);
   const hasLine =
     Number.isFinite(borderWidth) &&
     borderWidth > 0 &&
@@ -439,10 +489,12 @@ function textFromNode(
   frameRect: DOMRect,
 ): NativeSceneElement {
   const color = combineOpacity(
-    parseCssColor(style.color) ?? { color: '000000', transparency: 0 },
+    resolveCssColor(style.color) ?? { color: '000000', transparency: 0 },
     Number.parseFloat(style.opacity),
   );
   const weight = Number.parseInt(style.fontWeight, 10);
+  const letterSpacing = Number.parseFloat(style.letterSpacing);
+  const lineHeight = Number.parseFloat(style.lineHeight);
   return {
     kind: 'text',
     bounds: relativeBounds(rect, frameRect),
@@ -454,6 +506,8 @@ function textFromNode(
     italic: style.fontStyle === 'italic' || style.fontStyle === 'oblique',
     align: textAlign(style.textAlign),
     valign: verticalAlign(style.alignItems),
+    charSpacing: Number.isFinite(letterSpacing) ? letterSpacing * PX_TO_PT : undefined,
+    lineSpacing: Number.isFinite(lineHeight) ? lineHeight * PX_TO_PT : undefined,
   };
 }
 
@@ -500,8 +554,7 @@ function hasUnsupportedDecoration(style: CSSStyleDeclaration): boolean {
     style.backgroundImage !== 'none' ||
     style.boxShadow !== 'none' ||
     style.filter !== 'none' ||
-    style.clipPath !== 'none' ||
-    style.maskImage !== 'none'
+    (style.maskImage !== undefined && style.maskImage !== 'none')
   );
 }
 
@@ -550,6 +603,11 @@ function combineOpacity(color: Color, opacity: number): Color {
 function opacityToTransparency(value: string): number {
   const opacity = Number.parseFloat(value);
   return 100 - clamp(Number.isFinite(opacity) ? opacity : 1, 0, 1) * 100;
+}
+
+function normalizedRadius(radius: number, bounds: Bounds): number {
+  const maximum = Math.min(bounds.w, bounds.h) / 2;
+  return maximum > 0 ? clamp(radius / maximum, 0, 1) : 0;
 }
 
 function imageFit(value: string): 'contain' | 'cover' | 'fill' {
