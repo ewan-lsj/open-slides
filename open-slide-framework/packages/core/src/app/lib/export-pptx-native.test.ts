@@ -2,10 +2,10 @@ import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import {
   buildNativePptx,
+  type NativeSlideScene,
   parseCssColor,
   relativeBounds,
   requiresAtomicRaster,
-  type NativeSlideScene,
 } from './export-pptx-native';
 
 describe('editable PPTX export', () => {
@@ -33,10 +33,10 @@ describe('editable PPTX export', () => {
     expect(requiresAtomicRaster({ tagName: 'SVG' } as Element, baseStyle)).toBe(true);
     expect(requiresAtomicRaster({ tagName: 'DIV' } as Element, baseStyle)).toBe(false);
     expect(
-      requiresAtomicRaster(
-        { tagName: 'DIV' } as Element,
-        { ...baseStyle, transform: 'matrix(0, 1, -1, 0, 0, 0)' },
-      ),
+      requiresAtomicRaster({ tagName: 'DIV' } as Element, {
+        ...baseStyle,
+        transform: 'matrix(0, 1, -1, 0, 0, 0)',
+      }),
     ).toBe(true);
   });
 

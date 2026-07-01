@@ -10,7 +10,6 @@ import type { SlideModule } from './sdk';
 const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 const SLIDE_W_IN = 13.333;
-const SLIDE_H_IN = 7.5;
 const PX_TO_IN = SLIDE_W_IN / SLIDE_W;
 const PX_TO_PT = 72 / 96;
 const ANIMATION_TIMEOUT_MS = 15_000;
@@ -41,7 +40,7 @@ export type NativeSceneElement =
       bold: boolean;
       italic: boolean;
       align: 'left' | 'center' | 'right' | 'justify';
-      valign: 'top' | 'mid' | 'bottom';
+      valign: 'top' | 'middle' | 'bottom';
     }
   | {
       kind: 'image';
@@ -186,10 +185,7 @@ export async function extractNativeSlideScene(
   return { elements, fallbackCount, notes };
 }
 
-export async function buildNativePptx(
-  scenes: NativeSlideScene[],
-  title: string,
-): Promise<Blob> {
+export async function buildNativePptx(scenes: NativeSlideScene[], title: string): Promise<Blob> {
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.author = 'open-slide';
@@ -300,7 +296,10 @@ export function parseCssColor(value: string): Color | undefined {
       : Number.parseFloat(alphaPart)
     : 1;
   return {
-    color: channels.map((channel) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0')).join('').toUpperCase(),
+    color: channels
+      .map((channel) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase(),
     transparency: (1 - clamp(alpha, 0, 1)) * 100,
   };
 }
@@ -439,7 +438,10 @@ function textFromNode(
   rect: DOMRect,
   frameRect: DOMRect,
 ): NativeSceneElement {
-  const color = combineOpacity(parseCssColor(style.color) ?? { color: '000000', transparency: 0 }, Number.parseFloat(style.opacity));
+  const color = combineOpacity(
+    parseCssColor(style.color) ?? { color: '000000', transparency: 0 },
+    Number.parseFloat(style.opacity),
+  );
   const weight = Number.parseInt(style.fontWeight, 10);
   return {
     kind: 'text',
@@ -560,8 +562,8 @@ function textAlign(value: string): 'left' | 'center' | 'right' | 'justify' {
   return 'left';
 }
 
-function verticalAlign(value: string): 'top' | 'mid' | 'bottom' {
-  if (value === 'center') return 'mid';
+function verticalAlign(value: string): 'top' | 'middle' | 'bottom' {
+  if (value === 'center') return 'middle';
   if (value === 'flex-end' || value === 'end') return 'bottom';
   return 'top';
 }

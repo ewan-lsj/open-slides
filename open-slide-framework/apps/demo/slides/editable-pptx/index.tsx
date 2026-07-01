@@ -25,9 +25,7 @@ const EditableExport: Page = () => (
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
       <img src={mark} alt="Open slide mark" style={{ width: 92, height: 92 }} />
-      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--osd-accent)' }}>
-        EDITABLE PPTX
-      </div>
+      <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--osd-accent)' }}>EDITABLE PPTX</div>
     </div>
     <h1
       style={{
