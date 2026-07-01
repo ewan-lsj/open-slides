@@ -11,7 +11,7 @@ const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 const SLIDE_W_IN = 13.333;
 const PX_TO_IN = SLIDE_W_IN / SLIDE_W;
-const PX_TO_PT = 72 / 96;
+const PX_TO_PT = PX_TO_IN * 72;
 const ANIMATION_TIMEOUT_MS = 15_000;
 const POLL_INTERVAL_MS = 100;
 const CAPTURE_CLASS = 'os-native-pptx-capture';
@@ -137,7 +137,7 @@ export async function extractNativeSlideScene(
     const rect = element.getBoundingClientRect();
     if (!isVisible(style, rect, frameRect)) return;
 
-    if (requiresAtomicRaster(element, style)) {
+    if (requiresAtomicRaster(element, style) || clipsDescendants(element, style, rect, frameRect)) {
       elements.push(await rasterize(element, rect, frameRect, false));
       fallbackCount++;
       return;
@@ -260,10 +260,10 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
 
 export function relativeBounds(rect: DOMRect, frameRect: DOMRect): Bounds {
   return {
-    x: clamp(rect.left - frameRect.left, 0, SLIDE_W),
-    y: clamp(rect.top - frameRect.top, 0, SLIDE_H),
-    w: clamp(rect.width, 0, SLIDE_W),
-    h: clamp(rect.height, 0, SLIDE_H),
+    x: rect.left - frameRect.left,
+    y: rect.top - frameRect.top,
+    w: rect.width,
+    h: rect.height,
   };
 }
 
@@ -563,6 +563,29 @@ function hasVisiblePseudoElement(element: Element): boolean {
     const style = getComputedStyle(element, pseudo);
     return style.content !== 'none' && style.content !== 'normal' && style.display !== 'none';
   });
+}
+
+function clipsDescendants(
+  element: Element,
+  style: CSSStyleDeclaration,
+  rect: DOMRect,
+  frameRect: DOMRect,
+): boolean {
+  if (element.children.length === 0) return false;
+  const clips =
+    style.overflow === 'hidden' ||
+    style.overflow === 'clip' ||
+    style.overflowX === 'hidden' ||
+    style.overflowX === 'clip' ||
+    style.overflowY === 'hidden' ||
+    style.overflowY === 'clip';
+  if (!clips) return false;
+  const coversFrame =
+    Math.abs(rect.left - frameRect.left) < 0.5 &&
+    Math.abs(rect.top - frameRect.top) < 0.5 &&
+    Math.abs(rect.width - frameRect.width) < 0.5 &&
+    Math.abs(rect.height - frameRect.height) < 0.5;
+  return !coversFrame;
 }
 
 function sortedChildren(element: Element): Element[] {

@@ -22,6 +22,16 @@ describe('editable PPTX export', () => {
     const rect = { left: 125, top: 250, width: 400, height: 300 } as DOMRect;
     const frame = { left: 100, top: 200 } as DOMRect;
     expect(relativeBounds(rect, frame)).toEqual({ x: 25, y: 50, w: 400, h: 300 });
+
+    const clipped = {
+      left: 50,
+      top: 150,
+      right: 250,
+      bottom: 450,
+      width: 200,
+      height: 300,
+    } as DOMRect;
+    expect(relativeBounds(clipped, frame)).toEqual({ x: -50, y: -50, w: 200, h: 300 });
   });
 
   it('classifies atomic and rotated elements for raster fallback', () => {

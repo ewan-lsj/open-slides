@@ -10,9 +10,8 @@ const DEBOUNCE_MS = 600;
 
 type Target = { slideId: string; index: number };
 
-// HMR is suppressed for our writes, so the cached slide module's `notes`
-// stays stale across navigation. Cache last-saved text per target so
-// switching slides and back doesn't surface the old value.
+// HMR is suppressed for note writes, so the cached slide module stays stale.
+// Keep the latest local text available to navigation and export immediately.
 const sessionCache = new Map<string, string>();
 const cacheKey = (slideId: string, index: number) => `${slideId}:${index}`;
 
@@ -125,6 +124,7 @@ export function useNotes(slideId: string, index: number, initial: string | undef
   const setValue = useCallback(
     (next: string) => {
       setValueState(next);
+      sessionCache.set(cacheKey(targetRef.current.slideId, targetRef.current.index), next);
       dirtyRef.current = next !== lastSavedRef.current;
       cancelTimer();
       if (!dirtyRef.current) {
