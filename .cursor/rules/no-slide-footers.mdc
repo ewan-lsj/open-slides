@@ -1,0 +1,11 @@
+---
+description: Prevent generated slides from adding footer titles or page numbers
+globs: my-deck/slides/**/index.tsx
+alwaysApply: false
+---
+
+# No slide footers
+
+- Do not add footer titles, deck names, partner names, page numbers, or total-page counts to slides.
+- Do not introduce or use footer components whose purpose is to render this metadata.
+- When editing an existing page, leave unrelated legacy footers unchanged unless the user asks to remove them.
