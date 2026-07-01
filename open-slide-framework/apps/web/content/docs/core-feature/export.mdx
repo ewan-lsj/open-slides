@@ -25,13 +25,16 @@ landscape so each slide is exactly one page.
 
 ## PPTX
 
-From the toolbar, choose one of two PowerPoint exports:
+From the toolbar, choose one of three presentation exports:
 
 - **Editable PPTX** converts text, images, solid fills, borders, and basic shapes
   into native presentation objects. Complex CSS, gradients, SVG, canvas, video,
   and other browser-only effects are kept as raster fallback regions.
 - **Image PPTX** captures each complete page as an image. It is the
   highest-fidelity option, but its contents are not editable.
+- **Google Slides PPTX** keeps text, images, solid fills, borders, and basic
+  shapes editable while using Google Slides-compatible fonts and conservative
+  text settings. Unsupported CSS regions remain images.
 
 The editable exporter reports how many complex regions it retained as images.
 Animations and stepped reveals are exported in their final settled state.
@@ -39,14 +42,39 @@ Speaker notes exported from the slide module are included.
 
 ## Use with Google Slides
 
-Export an **Editable PPTX**, upload it to Google Drive, and select
-**Open with → Google Slides**. Google converts supported text, images, and shapes
-into native Slides elements. No Google credentials or cloud integration are
-required by open-slide.
+Choose **Export for Google Slides**, upload the resulting
+`*-google-slides.pptx` file to Google Drive, and select **Open with → Google
+Slides**. Supported elements remain editable. Fonts available in Google Slides
+are preserved; unsupported fonts fall back to Arial to reduce substitution and
+text reflow. No Google credentials or cloud integration are required by
+open-slide.
 
-Google Slides can substitute fonts that are not available in Google Workspace
-and may reflow text slightly. Use common fonts and leave breathing room in text
-boxes when Google Slides is the destination.
+Complex CSS, SVG, video, canvas, gradients, and browser-only effects remain
+raster fallback regions. Use **Editable PPTX** instead when PowerPoint is the
+destination and preserving the original font and spacing settings matters more.
+
+### Preserve complex visualizations exactly
+
+Add `data-pptx-raster` to the outermost container of a diagram, chart, icon
+composition, or other complex visual that must remain visually exact:
+
+```tsx
+<div data-pptx-raster style={{ position: 'relative' }}>
+  <Diagram />
+  <Icons />
+  <Decorations />
+</div>
+```
+
+The exporter captures that complete container as one image in both editable
+PowerPoint and Google Slides exports. Content outside the marked container
+remains editable. Place headings, captions, and explanatory text outside the
+marked region when they need to remain editable.
+
+Use one marker on the common outer container rather than marking each child.
+This is especially important for overlapping elements, SVG compositions,
+gradients, masks, shadows, transforms, and browser-rendered charts. SVG,
+canvas, and video elements are also detected automatically.
 
 ## What gets shipped
 

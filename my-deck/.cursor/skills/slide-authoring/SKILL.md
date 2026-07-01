@@ -559,6 +559,34 @@ The component definition stays the single source of truth for layout/styling (ch
 
 This applies whenever the *visual element* repeats, not whenever the *data* does. Pure-text lists (`<ul><li>` bullets) are fine: each `<li>` is already its own JSX node, so plain literal markup is the correct shape — no need to wrap them in a component.
 
+## Complex visualizations in PPTX exports
+
+When a diagram, chart, icon composition, or layered visual must preserve its
+exact browser-rendered appearance in PowerPoint or Google Slides, put
+`data-pptx-raster` on its outermost common container:
+
+```tsx
+<div data-pptx-raster style={{ position: 'relative' }}>
+  <Diagram />
+  <Icons />
+  <Decorations />
+</div>
+```
+
+The PPTX exporter captures the marked container as one image while keeping
+everything outside it editable.
+
+- Mark the complete composite once, not each child.
+- Use it for overlapping elements, SVG compositions, gradients, masks,
+  shadows, transforms, browser-rendered charts, and visuals whose layering must
+  remain exact.
+- Keep headings, captions, and explanatory text outside the marker when they
+  need to remain editable.
+- Do not mark an entire page merely because one region is complex; use the
+  smallest container that contains the complete visual.
+- SVG, canvas, and video are already rasterized automatically, but mark their
+  shared parent when they visually compose with surrounding layers.
+
 ## Runtime behavior you get for free
 
 - Home page lists every folder under `slides/`.
@@ -580,6 +608,7 @@ This applies whenever the *visual element* repeats, not whenever the *data* does
 - [ ] Visually repeated elements (cards, tiles, logo rows) are rendered as explicit `<Component />` instances, not via `array.map` over a data list.
 - [ ] All imported assets exist on disk — slide-local under `slides/<id>/assets/`, or global under `assets/` (imported via `@assets/...`).
 - [ ] Every `<ImagePlaceholder>` corresponds to a real image the user must supply — not decorative filler. If it could be replaced by typography or layout, it should be.
+- [ ] Every complex visualization that depends on overlapping layers or browser-only rendering has `data-pptx-raster` on its smallest complete outer container.
 - [ ] If a page uses `<Steps>`/`<Step>`, every `<Step>` is a direct child of a `<Steps>`, and the page still reads as complete when jumped to via the overview grid (entering forward builds up; jumping in shows it fully revealed).
 - [ ] If a `SlideTransition` is declared, every page sits in one family — same duration band (140–280 ms), same easing pair, same out-then-in stagger, magnitude under 12 px / 3%. No six-different-vocabularies decks. When in doubt, omit transitions entirely.
 - [ ] Nothing outside `slides/<id>/` was edited.

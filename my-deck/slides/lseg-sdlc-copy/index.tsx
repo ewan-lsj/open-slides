@@ -687,6 +687,7 @@ const AvatarDot = ({ first = false }: { first?: boolean }) => (
 
 const PodBadge = () => (
   <div
+    data-pptx-raster
     style={{
       display: 'inline-flex',
       alignItems: 'center',

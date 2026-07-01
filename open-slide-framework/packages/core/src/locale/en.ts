@@ -112,9 +112,11 @@ export const en: Locale = {
     exportAsHtml: 'Export as HTML',
     exportAsPdf: 'Export as PDF',
     exportAsImagePptx: 'Export as image PPTX',
+    exportAsGoogleSlidesPptx: 'Export for Google Slides',
     exportAsPptx: 'Export as editable PPTX',
     pdfExportFailed: 'PDF export failed',
     imagePptxExportFailed: 'Image PPTX export failed',
+    googleSlidesPptxExportFailed: 'Google Slides export failed',
     pptxExportFailed: 'Editable PPTX export failed',
     pdfExportSafariUnsupported:
       'Export as PDF is not supported on Safari. Please try a Chromium-based browser instead.',

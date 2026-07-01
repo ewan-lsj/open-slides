@@ -18,9 +18,35 @@ const CAPTURE_CLASS = 'os-native-pptx-capture';
 const CAPTURE_STYLE_ID = 'os-native-pptx-capture-style';
 const ATOMIC_RASTER_TAGS = new Set(['CANVAS', 'IFRAME', 'OBJECT', 'SVG', 'VIDEO']);
 const FROZEN_PROPS = ['opacity', 'transform', 'filter', 'clip-path'] as const;
+const GOOGLE_SLIDES_SAFE_FONTS = new Set(
+  [
+    'Arial',
+    'Arial Narrow',
+    'Comic Sans MS',
+    'Courier New',
+    'Georgia',
+    'Inter',
+    'Lato',
+    'Merriweather',
+    'Montserrat',
+    'Nunito',
+    'Open Sans',
+    'Oswald',
+    'Playfair Display',
+    'Poppins',
+    'Raleway',
+    'Roboto',
+    'Roboto Condensed',
+    'Source Sans 3',
+    'Times New Roman',
+    'Trebuchet MS',
+    'Verdana',
+  ].map((font) => font.toLowerCase()),
+);
 
 type Bounds = { x: number; y: number; w: number; h: number };
 type Color = { color: string; transparency: number };
+export type NativePptxProfile = 'powerpoint' | 'google-slides';
 
 export type NativeSceneElement =
   | {
@@ -61,12 +87,39 @@ export type NativeSceneElement =
 export type NativeSlideScene = {
   elements: NativeSceneElement[];
   fallbackCount: number;
+  background?: Color;
   notes?: string;
 };
 
 export async function exportSlideAsPptx(
   slide: SlideModule,
   slideId: string,
+  onProgress?: (progress: PptxExportProgress) => void,
+): Promise<void> {
+  return exportSlideAsNativePptx(slide, slideId, 'powerpoint', onProgress);
+}
+
+export async function exportSlideAsGoogleSlidesPptx(
+  slide: SlideModule,
+  slideId: string,
+  onProgress?: (progress: PptxExportProgress) => void,
+): Promise<void> {
+  return exportSlideAsNativePptx(slide, slideId, 'google-slides', onProgress);
+}
+
+export function resolveNativePptxFilename(slideId: string, profile: NativePptxProfile): string {
+  return profile === 'google-slides' ? `${slideId}-google-slides.pptx` : `${slideId}.pptx`;
+}
+
+export function googleSlidesFontFace(fontFace: string): string {
+  const normalized = fontFace.trim().replace(/^['"]|['"]$/g, '');
+  return GOOGLE_SLIDES_SAFE_FONTS.has(normalized.toLowerCase()) ? normalized : 'Arial';
+}
+
+async function exportSlideAsNativePptx(
+  slide: SlideModule,
+  slideId: string,
+  profile: NativePptxProfile,
   onProgress?: (progress: PptxExportProgress) => void,
 ): Promise<void> {
   const pages = slide.default ?? [];
@@ -82,7 +135,7 @@ export async function exportSlideAsPptx(
     const scenes: NativeSlideScene[] = [];
     for (let i = 0; i < capture.frames.length; i++) {
       freezeForCapture(capture.frames[i]);
-      const scene = await extractNativeSlideScene(capture.frames[i], slide.notes?.[i]);
+      const scene = await extractNativeSlideScene(capture.frames[i], slide.notes?.[i], profile);
       scenes.push(scene);
       fallbackCount += scene.fallbackCount;
       onProgress?.({
@@ -101,8 +154,8 @@ export async function exportSlideAsPptx(
       percent: 98,
       fallbackCount,
     });
-    const blob = await buildNativePptx(scenes, slide.meta?.title ?? slideId);
-    downloadBlob(blob, `${slideId}.pptx`);
+    const blob = await buildNativePptx(scenes, slide.meta?.title ?? slideId, profile);
+    downloadBlob(blob, resolveNativePptxFilename(slideId, profile));
     onProgress?.({
       phase: 'done',
       current: total,
@@ -118,17 +171,16 @@ export async function exportSlideAsPptx(
 export async function extractNativeSlideScene(
   frame: HTMLElement,
   notes?: string,
+  profile: NativePptxProfile = 'powerpoint',
 ): Promise<NativeSlideScene> {
   const frameRect = frame.getBoundingClientRect();
   const elements: NativeSceneElement[] = [];
   let fallbackCount = 0;
+  let background = resolveCssColor(getComputedStyle(frame).backgroundColor);
 
   if (hasUnsupportedDecoration(getComputedStyle(frame))) {
     elements.push(await rasterize(frame, frameRect, frameRect, true));
     fallbackCount++;
-  } else {
-    const shape = shapeFromElement(frame, frameRect, frameRect);
-    if (shape) elements.push(shape);
   }
 
   const visit = async (element: Element): Promise<void> => {
@@ -148,7 +200,17 @@ export async function extractNativeSlideScene(
       fallbackCount++;
     } else {
       const shape = shapeFromElement(element, rect, frameRect);
-      if (shape) elements.push(shape);
+      if (
+        shape?.kind === 'shape' &&
+        shape.fill &&
+        !shape.line &&
+        shape.fill.transparency === 0 &&
+        coversFrame(rect, frameRect)
+      ) {
+        background = shape.fill;
+      } else if (shape) {
+        elements.push(shape);
+      }
     }
 
     if (element instanceof HTMLImageElement) {
@@ -177,22 +239,27 @@ export async function extractNativeSlideScene(
       range.selectNodeContents(node);
       const textRect = range.getBoundingClientRect();
       if (textRect.width <= 0 || textRect.height <= 0) continue;
-      elements.push(textFromNode(text, style, textRect, frameRect));
+      elements.push(textFromNode(text, style, textRect, rect, frameRect, profile));
     }
 
     for (const child of sortedChildren(element)) await visit(child);
   };
 
   for (const child of sortedChildren(frame)) await visit(child);
-  return { elements, fallbackCount, notes };
+  return { elements, fallbackCount, background, notes };
 }
 
-export async function buildNativePptx(scenes: NativeSlideScene[], title: string): Promise<Blob> {
+export async function buildNativePptx(
+  scenes: NativeSlideScene[],
+  title: string,
+  profile: NativePptxProfile = 'powerpoint',
+): Promise<Blob> {
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.author = 'open-slide';
   pptx.company = 'open-slide';
-  pptx.subject = 'Editable open-slide export';
+  pptx.subject =
+    profile === 'google-slides' ? 'Editable Google Slides export' : 'Editable open-slide export';
   pptx.title = title;
   pptx.theme = {
     headFontFace: 'Arial',
@@ -201,7 +268,7 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
 
   for (const scene of scenes) {
     const slide = pptx.addSlide();
-    slide.background = { color: 'FFFFFF' };
+    slide.background = { color: scene.background?.color ?? 'FFFFFF' };
     for (const element of scene.elements) {
       const position = toPptxPosition(element.bounds);
       if (element.kind === 'shape') {
@@ -228,14 +295,15 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
           breakLine: false,
           color: element.color.color,
           transparency: element.color.transparency,
-          fontFace: element.fontFace,
+          fontFace:
+            profile === 'google-slides' ? googleSlidesFontFace(element.fontFace) : element.fontFace,
           fontSize: element.fontSize,
           bold: element.bold,
           italic: element.italic,
           align: element.align,
           valign: element.valign,
-          charSpacing: element.charSpacing,
-          lineSpacing: element.lineSpacing,
+          charSpacing: profile === 'google-slides' ? undefined : element.charSpacing,
+          lineSpacing: profile === 'google-slides' ? undefined : element.lineSpacing,
         });
       } else {
         slide.addImage({
@@ -265,6 +333,46 @@ export function relativeBounds(rect: DOMRect, frameRect: DOMRect): Bounds {
     w: rect.width,
     h: rect.height,
   };
+}
+
+export function googleSlidesTextBounds(
+  textRect: DOMRect,
+  containerRect: DOMRect,
+  frameRect: DOMRect,
+  textAlignValue: string,
+  fontSizePx: number,
+): Bounds {
+  const textBounds = relativeBounds(textRect, frameRect);
+  const containerBounds = relativeBounds(containerRect, frameRect);
+  const contained =
+    containerRect.left <= textRect.left + 0.5 &&
+    containerRect.top <= textRect.top + 0.5 &&
+    containerRect.right >= textRect.right - 0.5 &&
+    containerRect.bottom >= textRect.bottom - 0.5;
+  const useContainer =
+    contained &&
+    containerBounds.w >= textBounds.w &&
+    containerBounds.h >= textBounds.h &&
+    containerBounds.w > 0 &&
+    containerBounds.h > 0;
+  const bounds = useContainer ? { ...containerBounds } : { ...textBounds };
+  const safeFontSize = Number.isFinite(fontSizePx) ? fontSizePx : 16;
+  const horizontalTolerance = Math.max(8, safeFontSize * 0.4, textBounds.w * 0.2);
+
+  if (bounds.w <= textBounds.w + 1) {
+    if (textAlignValue === 'center') bounds.x -= horizontalTolerance / 2;
+    if (textAlignValue === 'right' || textAlignValue === 'end') bounds.x -= horizontalTolerance;
+    bounds.w += horizontalTolerance;
+  }
+
+  bounds.h = Math.max(bounds.h, safeFontSize * 1.35);
+  const right = Math.min(frameRect.width, bounds.x + bounds.w);
+  const bottom = Math.min(frameRect.height, bounds.y + bounds.h);
+  bounds.x = Math.max(0, bounds.x);
+  bounds.y = Math.max(0, bounds.y);
+  bounds.w = Math.max(1, right - bounds.x);
+  bounds.h = Math.max(1, bottom - bounds.y);
+  return bounds;
 }
 
 export function parseCssColor(value: string): Color | undefined {
@@ -335,10 +443,18 @@ function resolveCssColor(value: string): Color | undefined {
 }
 
 export function requiresAtomicRaster(element: Element, style: CSSStyleDeclaration): boolean {
+  if ((element as HTMLElement).dataset?.pptxRaster !== undefined) return true;
   if (ATOMIC_RASTER_TAGS.has(element.tagName)) return true;
   if (style.mixBlendMode !== 'normal' || style.backdropFilter !== 'none') return true;
   const radius = Number.parseFloat(style.borderTopLeftRadius) || 0;
   if (element.tagName === 'IMG' && radius > 0) return true;
+  if (
+    radius > 0 &&
+    element.children.length > 0 &&
+    Array.from(element.children).every((child) => child.tagName === 'SVG')
+  ) {
+    return true;
+  }
   if (
     (style.clipPath && style.clipPath !== 'none') ||
     (radius > 0 &&
@@ -486,7 +602,9 @@ function textFromNode(
   text: string,
   style: CSSStyleDeclaration,
   rect: DOMRect,
+  containerRect: DOMRect,
   frameRect: DOMRect,
+  profile: NativePptxProfile,
 ): NativeSceneElement {
   const color = combineOpacity(
     resolveCssColor(style.color) ?? { color: '000000', transparency: 0 },
@@ -495,17 +613,22 @@ function textFromNode(
   const weight = Number.parseInt(style.fontWeight, 10);
   const letterSpacing = Number.parseFloat(style.letterSpacing);
   const lineHeight = Number.parseFloat(style.lineHeight);
+  const fontSizePx = Number.parseFloat(style.fontSize);
+  const bounds =
+    profile === 'google-slides'
+      ? googleSlidesTextBounds(rect, containerRect, frameRect, style.textAlign, fontSizePx)
+      : relativeBounds(rect, frameRect);
   return {
     kind: 'text',
-    bounds: relativeBounds(rect, frameRect),
+    bounds,
     text,
     color,
     fontFace: style.fontFamily.split(',')[0]?.replace(/['"]/g, '').trim() || 'Arial',
-    fontSize: Math.max(1, Number.parseFloat(style.fontSize) * PX_TO_PT),
+    fontSize: Math.max(1, fontSizePx * PX_TO_PT),
     bold: Number.isFinite(weight) ? weight >= 600 : style.fontWeight === 'bold',
     italic: style.fontStyle === 'italic' || style.fontStyle === 'oblique',
-    align: textAlign(style.textAlign),
-    valign: verticalAlign(style.alignItems),
+    align: inferTextAlign(style, rect, containerRect),
+    valign: inferTextValign(rect, containerRect, style),
     charSpacing: Number.isFinite(letterSpacing) ? letterSpacing * PX_TO_PT : undefined,
     lineSpacing: Number.isFinite(lineHeight) ? lineHeight * PX_TO_PT : undefined,
   };
@@ -580,12 +703,16 @@ function clipsDescendants(
     style.overflowY === 'hidden' ||
     style.overflowY === 'clip';
   if (!clips) return false;
-  const coversFrame =
+  return !coversFrame(rect, frameRect);
+}
+
+function coversFrame(rect: DOMRect, frameRect: DOMRect): boolean {
+  return (
     Math.abs(rect.left - frameRect.left) < 0.5 &&
     Math.abs(rect.top - frameRect.top) < 0.5 &&
     Math.abs(rect.width - frameRect.width) < 0.5 &&
-    Math.abs(rect.height - frameRect.height) < 0.5;
-  return !coversFrame;
+    Math.abs(rect.height - frameRect.height) < 0.5
+  );
 }
 
 function sortedChildren(element: Element): Element[] {
@@ -641,6 +768,68 @@ function imageFit(value: string): 'contain' | 'cover' | 'fill' {
 function textAlign(value: string): 'left' | 'center' | 'right' | 'justify' {
   if (value === 'center' || value === 'right' || value === 'justify') return value;
   return 'left';
+}
+
+export function inferTextAlign(
+  style: Pick<
+    CSSStyleDeclaration,
+    'alignItems' | 'display' | 'flexDirection' | 'justifyContent' | 'justifyItems' | 'textAlign'
+  >,
+  textRect?: Pick<DOMRect, 'left' | 'right'>,
+  containerRect?: Pick<DOMRect, 'left' | 'right' | 'width'>,
+): 'left' | 'center' | 'right' | 'justify' {
+  if (
+    style.textAlign === 'left' ||
+    style.textAlign === 'center' ||
+    style.textAlign === 'right' ||
+    style.textAlign === 'justify'
+  ) {
+    return textAlign(style.textAlign);
+  }
+  if (style.display.includes('flex')) {
+    const horizontalControl = style.flexDirection.startsWith('column')
+      ? style.alignItems
+      : style.justifyContent;
+    if (horizontalControl === 'center') return 'center';
+    if (horizontalControl === 'flex-end' || horizontalControl === 'end') return 'right';
+  }
+  if (style.display.includes('grid')) {
+    if (style.justifyItems === 'center') return 'center';
+    if (style.justifyItems === 'flex-end' || style.justifyItems === 'end') return 'right';
+  }
+  if (style.display.startsWith('inline') && textRect && containerRect) {
+    const leftGap = Math.max(0, textRect.left - containerRect.left);
+    const rightGap = Math.max(0, containerRect.right - textRect.right);
+    const tolerance = Math.max(2, containerRect.width * 0.08);
+    if (Math.abs(leftGap - rightGap) <= tolerance && (leftGap > 0 || rightGap > 0)) return 'center';
+    if (rightGap + tolerance < leftGap) return 'right';
+  }
+  return textAlign(style.textAlign);
+}
+
+export function inferTextValign(
+  textRect: Pick<DOMRect, 'bottom' | 'top'>,
+  containerRect: Pick<DOMRect, 'bottom' | 'height' | 'top'>,
+  style: Pick<CSSStyleDeclaration, 'alignItems' | 'display' | 'flexDirection' | 'justifyContent'>,
+): 'top' | 'middle' | 'bottom' {
+  if (style.display.includes('flex')) {
+    const verticalControl = style.flexDirection.startsWith('column')
+      ? style.justifyContent
+      : style.alignItems;
+    if (verticalControl === 'center') return 'middle';
+    if (verticalControl === 'flex-end' || verticalControl === 'end') return 'bottom';
+    if (verticalControl === 'flex-start' || verticalControl === 'start') return 'top';
+  } else if (style.display.includes('grid')) {
+    const gridAlignment = verticalAlign(style.alignItems);
+    if (gridAlignment !== 'top' || style.alignItems === 'start') return gridAlignment;
+  }
+
+  const topGap = Math.max(0, textRect.top - containerRect.top);
+  const bottomGap = Math.max(0, containerRect.bottom - textRect.bottom);
+  const tolerance = Math.max(2, containerRect.height * 0.12);
+  if (Math.abs(topGap - bottomGap) <= tolerance) return 'middle';
+  if (bottomGap + tolerance < topGap) return 'bottom';
+  return 'top';
 }
 
 function verticalAlign(value: string): 'top' | 'middle' | 'bottom' {

@@ -60,7 +60,7 @@ import { type ThumbnailActions, ThumbnailRail } from '../components/thumbnail-ra
 import { exportSlideAsHtml } from '../lib/export-html';
 import { exportSlideAsPdf, isSafari } from '../lib/export-pdf';
 import { exportSlideAsImagePptx } from '../lib/export-pptx';
-import { exportSlideAsPptx } from '../lib/export-pptx-native';
+import { exportSlideAsGoogleSlidesPptx, exportSlideAsPptx } from '../lib/export-pptx-native';
 import {
   notesWithSessionCache,
   remapNotesSessionCacheAfterReorder,
@@ -461,6 +461,35 @@ export function Slide() {
     }
   };
 
+  const exportGoogleSlidesPptx = async () => {
+    if (!slide || exporting) return;
+    setExporting(true);
+    const toastId = `google-slides-pptx-export-${slideId}`;
+    toast.custom(
+      () => (
+        <PptxProgressToast
+          progress={{ phase: 'processing', current: 0, total: pages.length, percent: 0 }}
+        />
+      ),
+      { id: toastId, duration: Infinity },
+    );
+    try {
+      const exportSlide = {
+        ...slide,
+        notes: notesWithSessionCache(slideId, slide.notes, pages.length),
+      };
+      await exportSlideAsGoogleSlidesPptx(exportSlide, slideId, (p) => {
+        toast.custom(() => <PptxProgressToast progress={p} />, { id: toastId, duration: Infinity });
+      });
+    } catch (err) {
+      console.error('[open-slide] google slides pptx export failed', err);
+      toast.error(t.slide.googleSlidesPptxExportFailed, { id: toastId, duration: 4000 });
+    } finally {
+      setExporting(false);
+      toast.dismiss(toastId);
+    }
+  };
+
   const exportPptx = async () => {
     if (!slide || exporting) return;
     setExporting(true);
@@ -515,6 +544,10 @@ export function Slide() {
       <DropdownMenuItem disabled={exporting} onSelect={exportImagePptx}>
         <FileImage />
         {t.slide.exportAsImagePptx}
+      </DropdownMenuItem>
+      <DropdownMenuItem disabled={exporting} onSelect={exportGoogleSlidesPptx}>
+        <Presentation />
+        {t.slide.exportAsGoogleSlidesPptx}
       </DropdownMenuItem>
       <DropdownMenuItem disabled={exporting} onSelect={exportPptx}>
         <Presentation />

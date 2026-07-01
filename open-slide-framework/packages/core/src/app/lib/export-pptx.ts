@@ -164,7 +164,7 @@ const XML_DECL = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 const REL_NS = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const OD_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
-async function buildImagePptx(images: Uint8Array[]): Promise<Uint8Array> {
+export async function buildImagePptx(images: Uint8Array[]): Promise<Uint8Array> {
   const { zipSync, strToU8 } = await import('fflate');
   const n = images.length;
   const files: Record<string, Uint8Array> = {};
