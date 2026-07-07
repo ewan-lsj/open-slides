@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   Download,
   FileCode2,
-  FileImage,
   FileText,
   Link2,
   Loader2,
@@ -59,8 +58,7 @@ import { SlideTransitionLayer } from '../components/slide-transition-layer';
 import { type ThumbnailActions, ThumbnailRail } from '../components/thumbnail-rail';
 import { exportSlideAsHtml } from '../lib/export-html';
 import { exportSlideAsPdf, isSafari } from '../lib/export-pdf';
-import { exportSlideAsImagePptx } from '../lib/export-pptx';
-import { exportSlideAsGoogleSlidesPptx, exportSlideAsPptx } from '../lib/export-pptx-native';
+import { exportSlideAsPptx } from '../lib/export-pptx-native';
 import {
   notesWithSessionCache,
   remapNotesSessionCacheAfterReorder,
@@ -436,64 +434,10 @@ export function Slide() {
     }
   };
 
-  const exportImagePptx = async () => {
-    if (!slide || exporting) return;
-    setExporting(true);
-    const toastId = `pptx-export-${slideId}`;
-    toast.custom(
-      () => (
-        <PptxProgressToast
-          progress={{ phase: 'processing', current: 0, total: pages.length, percent: 0 }}
-        />
-      ),
-      { id: toastId, duration: Infinity },
-    );
-    try {
-      await exportSlideAsImagePptx(slide, slideId, (p) => {
-        toast.custom(() => <PptxProgressToast progress={p} />, { id: toastId, duration: Infinity });
-      });
-    } catch (err) {
-      console.error('[open-slide] image pptx export failed', err);
-      toast.error(t.slide.imagePptxExportFailed, { id: toastId, duration: 4000 });
-    } finally {
-      setExporting(false);
-      toast.dismiss(toastId);
-    }
-  };
-
-  const exportGoogleSlidesPptx = async () => {
-    if (!slide || exporting) return;
-    setExporting(true);
-    const toastId = `google-slides-pptx-export-${slideId}`;
-    toast.custom(
-      () => (
-        <PptxProgressToast
-          progress={{ phase: 'processing', current: 0, total: pages.length, percent: 0 }}
-        />
-      ),
-      { id: toastId, duration: Infinity },
-    );
-    try {
-      const exportSlide = {
-        ...slide,
-        notes: notesWithSessionCache(slideId, slide.notes, pages.length),
-      };
-      await exportSlideAsGoogleSlidesPptx(exportSlide, slideId, (p) => {
-        toast.custom(() => <PptxProgressToast progress={p} />, { id: toastId, duration: Infinity });
-      });
-    } catch (err) {
-      console.error('[open-slide] google slides pptx export failed', err);
-      toast.error(t.slide.googleSlidesPptxExportFailed, { id: toastId, duration: 4000 });
-    } finally {
-      setExporting(false);
-      toast.dismiss(toastId);
-    }
-  };
-
   const exportPptx = async () => {
     if (!slide || exporting) return;
     setExporting(true);
-    const toastId = `native-pptx-export-${slideId}`;
+    const toastId = `pptx-export-${slideId}`;
     toast.custom(
       () => (
         <PptxProgressToast
@@ -522,7 +466,7 @@ export function Slide() {
       });
     } catch (err) {
       failed = true;
-      console.error('[open-slide] editable pptx export failed', err);
+      console.error('[open-slide] pptx export failed', err);
       toast.error(t.slide.pptxExportFailed, { id: toastId, duration: 4000 });
     } finally {
       setExporting(false);
@@ -539,15 +483,6 @@ export function Slide() {
       <DropdownMenuItem disabled={exporting} onSelect={exportPdf}>
         <FileText />
         {t.slide.exportAsPdf}
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem disabled={exporting} onSelect={exportImagePptx}>
-        <FileImage />
-        {t.slide.exportAsImagePptx}
-      </DropdownMenuItem>
-      <DropdownMenuItem disabled={exporting} onSelect={exportGoogleSlidesPptx}>
-        <Presentation />
-        {t.slide.exportAsGoogleSlidesPptx}
       </DropdownMenuItem>
       <DropdownMenuItem disabled={exporting} onSelect={exportPptx}>
         <Presentation />

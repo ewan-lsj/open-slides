@@ -46,7 +46,6 @@ const GOOGLE_SLIDES_SAFE_FONTS = new Set(
 
 type Bounds = { x: number; y: number; w: number; h: number };
 type Color = { color: string; transparency: number };
-export type NativePptxProfile = 'powerpoint' | 'google-slides';
 
 export type NativeSceneElement =
   | {
@@ -67,8 +66,6 @@ export type NativeSceneElement =
       italic: boolean;
       align: 'left' | 'center' | 'right' | 'justify';
       valign: 'top' | 'middle' | 'bottom';
-      charSpacing?: number;
-      lineSpacing?: number;
     }
   | {
       kind: 'image';
@@ -96,19 +93,11 @@ export async function exportSlideAsPptx(
   slideId: string,
   onProgress?: (progress: PptxExportProgress) => void,
 ): Promise<void> {
-  return exportSlideAsNativePptx(slide, slideId, 'powerpoint', onProgress);
+  return exportSlideAsNativePptx(slide, slideId, onProgress);
 }
 
-export async function exportSlideAsGoogleSlidesPptx(
-  slide: SlideModule,
-  slideId: string,
-  onProgress?: (progress: PptxExportProgress) => void,
-): Promise<void> {
-  return exportSlideAsNativePptx(slide, slideId, 'google-slides', onProgress);
-}
-
-export function resolveNativePptxFilename(slideId: string, profile: NativePptxProfile): string {
-  return profile === 'google-slides' ? `${slideId}-google-slides.pptx` : `${slideId}.pptx`;
+export function resolveNativePptxFilename(slideId: string): string {
+  return `${slideId}.pptx`;
 }
 
 export function googleSlidesFontFace(fontFace: string): string {
@@ -119,7 +108,6 @@ export function googleSlidesFontFace(fontFace: string): string {
 async function exportSlideAsNativePptx(
   slide: SlideModule,
   slideId: string,
-  profile: NativePptxProfile,
   onProgress?: (progress: PptxExportProgress) => void,
 ): Promise<void> {
   const pages = slide.default ?? [];
@@ -135,7 +123,7 @@ async function exportSlideAsNativePptx(
     const scenes: NativeSlideScene[] = [];
     for (let i = 0; i < capture.frames.length; i++) {
       freezeForCapture(capture.frames[i]);
-      const scene = await extractNativeSlideScene(capture.frames[i], slide.notes?.[i], profile);
+      const scene = await extractNativeSlideScene(capture.frames[i], slide.notes?.[i]);
       scenes.push(scene);
       fallbackCount += scene.fallbackCount;
       onProgress?.({
@@ -154,8 +142,8 @@ async function exportSlideAsNativePptx(
       percent: 98,
       fallbackCount,
     });
-    const blob = await buildNativePptx(scenes, slide.meta?.title ?? slideId, profile);
-    downloadBlob(blob, resolveNativePptxFilename(slideId, profile));
+    const blob = await buildNativePptx(scenes, slide.meta?.title ?? slideId);
+    downloadBlob(blob, resolveNativePptxFilename(slideId));
     onProgress?.({
       phase: 'done',
       current: total,
@@ -171,7 +159,6 @@ async function exportSlideAsNativePptx(
 export async function extractNativeSlideScene(
   frame: HTMLElement,
   notes?: string,
-  profile: NativePptxProfile = 'powerpoint',
 ): Promise<NativeSlideScene> {
   const frameRect = frame.getBoundingClientRect();
   const elements: NativeSceneElement[] = [];
@@ -239,7 +226,7 @@ export async function extractNativeSlideScene(
       range.selectNodeContents(node);
       const textRect = range.getBoundingClientRect();
       if (textRect.width <= 0 || textRect.height <= 0) continue;
-      elements.push(textFromNode(text, style, textRect, rect, frameRect, profile));
+      elements.push(textFromNode(text, style, textRect, rect, frameRect));
     }
 
     for (const child of sortedChildren(element)) await visit(child);
@@ -249,17 +236,12 @@ export async function extractNativeSlideScene(
   return { elements, fallbackCount, background, notes };
 }
 
-export async function buildNativePptx(
-  scenes: NativeSlideScene[],
-  title: string,
-  profile: NativePptxProfile = 'powerpoint',
-): Promise<Blob> {
+export async function buildNativePptx(scenes: NativeSlideScene[], title: string): Promise<Blob> {
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.author = 'open-slide';
   pptx.company = 'open-slide';
-  pptx.subject =
-    profile === 'google-slides' ? 'Editable Google Slides export' : 'Editable open-slide export';
+  pptx.subject = 'Editable Google Slides export';
   pptx.title = title;
   pptx.theme = {
     headFontFace: 'Arial',
@@ -295,15 +277,12 @@ export async function buildNativePptx(
           breakLine: false,
           color: element.color.color,
           transparency: element.color.transparency,
-          fontFace:
-            profile === 'google-slides' ? googleSlidesFontFace(element.fontFace) : element.fontFace,
+          fontFace: googleSlidesFontFace(element.fontFace),
           fontSize: element.fontSize,
           bold: element.bold,
           italic: element.italic,
           align: element.align,
           valign: element.valign,
-          charSpacing: profile === 'google-slides' ? undefined : element.charSpacing,
-          lineSpacing: profile === 'google-slides' ? undefined : element.lineSpacing,
         });
       } else {
         slide.addImage({
@@ -604,20 +583,14 @@ function textFromNode(
   rect: DOMRect,
   containerRect: DOMRect,
   frameRect: DOMRect,
-  profile: NativePptxProfile,
 ): NativeSceneElement {
   const color = combineOpacity(
     resolveCssColor(style.color) ?? { color: '000000', transparency: 0 },
     Number.parseFloat(style.opacity),
   );
   const weight = Number.parseInt(style.fontWeight, 10);
-  const letterSpacing = Number.parseFloat(style.letterSpacing);
-  const lineHeight = Number.parseFloat(style.lineHeight);
   const fontSizePx = Number.parseFloat(style.fontSize);
-  const bounds =
-    profile === 'google-slides'
-      ? googleSlidesTextBounds(rect, containerRect, frameRect, style.textAlign, fontSizePx)
-      : relativeBounds(rect, frameRect);
+  const bounds = googleSlidesTextBounds(rect, containerRect, frameRect, style.textAlign, fontSizePx);
   return {
     kind: 'text',
     bounds,
@@ -629,8 +602,6 @@ function textFromNode(
     italic: style.fontStyle === 'italic' || style.fontStyle === 'oblique',
     align: inferTextAlign(style, rect, containerRect),
     valign: inferTextValign(rect, containerRect, style),
-    charSpacing: Number.isFinite(letterSpacing) ? letterSpacing * PX_TO_PT : undefined,
-    lineSpacing: Number.isFinite(lineHeight) ? lineHeight * PX_TO_PT : undefined,
   };
 }
 
