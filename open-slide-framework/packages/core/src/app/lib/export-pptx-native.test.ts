@@ -39,16 +39,11 @@ describe('editable PPTX export', () => {
     expect(relativeBounds(clipped, frame)).toEqual({ x: -50, y: -50, w: 200, h: 300 });
   });
 
-  it('uses Google Slides-safe fonts and a distinct filename', () => {
+  it('uses Google Slides-safe fonts and a simple filename', () => {
     expect(googleSlidesFontFace('Roboto')).toBe('Roboto');
     expect(googleSlidesFontFace('"Open Sans"')).toBe('Open Sans');
     expect(googleSlidesFontFace('Geist')).toBe('Arial');
-    expect(resolveNativePptxFilename('quarterly-review', 'powerpoint')).toBe(
-      'quarterly-review.pptx',
-    );
-    expect(resolveNativePptxFilename('quarterly-review', 'google-slides')).toBe(
-      'quarterly-review-google-slides.pptx',
-    );
+    expect(resolveNativePptxFilename('quarterly-review')).toBe('quarterly-review.pptx');
   });
 
   it('gives Google Slides text room for font metric differences', () => {
@@ -280,7 +275,7 @@ describe('editable PPTX export', () => {
     expect(files['ppt/notesSlides/notesSlide1.xml']).toBeDefined();
   });
 
-  it('keeps text editable while retaining raster fallbacks for Google Slides', async () => {
+  it('keeps text editable while retaining raster fallbacks', async () => {
     const pixel =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+XyW8WQAAAABJRU5ErkJggg==';
     const scene: NativeSlideScene = {
@@ -297,8 +292,6 @@ describe('editable PPTX export', () => {
           italic: false,
           align: 'left',
           valign: 'top',
-          charSpacing: 2,
-          lineSpacing: 36,
         },
         {
           kind: 'raster',
@@ -308,7 +301,7 @@ describe('editable PPTX export', () => {
       ],
     };
 
-    const blob = await buildNativePptx([scene], 'Google Slides export', 'google-slides');
+    const blob = await buildNativePptx([scene], 'Google Slides export');
     const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
     const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
 

@@ -113,12 +113,8 @@ export type Locale = {
     toastCopyLinkFailed: string;
     exportAsHtml: string;
     exportAsPdf: string;
-    exportAsImagePptx: string;
-    exportAsGoogleSlidesPptx: string;
     exportAsPptx: string;
     pdfExportFailed: string;
-    imagePptxExportFailed: string;
-    googleSlidesPptxExportFailed: string;
     pptxExportFailed: string;
     pdfExportSafariUnsupported: string;
     present: string;
