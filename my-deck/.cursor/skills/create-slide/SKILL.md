@@ -7,7 +7,7 @@ description: Use this skill when the user wants to create, draft, author, or gen
 
 Use Cursor's `AskQuestion` tool for scoping — not free-form guesses. When multiple decisions are needed, batch them in one `AskQuestion` call with several questions.
 
-This skill owns the **workflow** for drafting a new deck. The technical reference — file contract, 1920×1080 canvas, type scale, palette, layout, assets — lives in the **`slide-authoring`** skill. Read that skill whenever you need details on *how* a page is structured. This skill assumes you'll consult it before writing code.
+This skill owns the **workflow** for drafting a new deck. The technical reference — file contract, 1920×1080 canvas, type scale, palette, layout, assets — lives in the **`slide-authoring`** skill. **`pptx-design`** is required on every page so Export → PPTX stays editable. Read both whenever you need details on *how* a page is structured. This skill assumes you'll consult them before writing code.
 
 You only write files under `slides/<id>/`. Never modify `package.json`, `open-slide.config.ts`, or existing slides.
 
@@ -76,7 +76,7 @@ Apply strong visual design principles — bold typography, deliberate palette, a
 
 ## Step 6 — Write `slides/<id>/index.tsx`
 
-Read the **`slide-authoring`** skill before writing — it covers the file contract, canvas rules, type scale, spacing, and asset imports, and it includes a starter template you can copy. Don't duplicate that knowledge here; use it.
+Read the **`slide-authoring`** and **`pptx-design`** skills before writing — authoring covers the file contract, canvas, type, and assets; PPTX design keeps cards/flows exportable. Don't duplicate that knowledge here; use it.
 
 ## Step 7 — Self-review
 

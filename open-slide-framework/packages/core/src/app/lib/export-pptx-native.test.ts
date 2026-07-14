@@ -11,6 +11,7 @@ import {
   relativeBounds,
   requiresAtomicRaster,
   resolveNativePptxFilename,
+  shapesFromBoxStyle,
 } from './export-pptx-native';
 
 describe('editable PPTX export', () => {
@@ -310,5 +311,164 @@ describe('editable PPTX export', () => {
     expect(slideXml).not.toContain('Geist');
     expect(slideXml).toContain('<a:normAutofit');
     expect(slideXml).toContain('<p:pic>');
+  });
+
+  it('emits a filled card as one text frame with stroke — not a bare shape under floating text', async () => {
+    const scene: NativeSlideScene = {
+      fallbackCount: 0,
+      background: { color: '000000', transparency: 0 },
+      elements: [
+        {
+          kind: 'text',
+          bounds: { x: 100, y: 200, w: 800, h: 200 },
+          text: 'Security control review templates',
+          color: { color: 'D6D6D6', transparency: 0 },
+          fontFace: 'Arial',
+          fontSize: 18,
+          bold: false,
+          italic: false,
+          align: 'left',
+          valign: 'middle',
+          fill: { color: '2E2E2E', transparency: 0 },
+          line: { color: '5C5C5C', transparency: 0, width: 1.5 },
+          radius: 4,
+          margin: [20, 20, 20, 20],
+        },
+      ],
+    };
+
+    const blob = await buildNativePptx([scene], 'Filled card');
+    const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
+    const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
+
+    expect(slideXml).toContain('Security control review templates');
+    expect(slideXml).toContain('<a:solidFill>');
+    expect(slideXml).toContain('2E2E2E');
+    expect(slideXml).toContain('5C5C5C');
+    // One shape that owns both fill and text body — no empty chrome rect underneath.
+    const shapeCount = (slideXml.match(/<p:sp>/g) ?? []).length;
+    expect(shapeCount).toBe(1);
+    expect(slideXml).toContain('<p:txBody>');
+  });
+
+  it('disables wrapping for nowrap chip labels so words stay on one line', async () => {
+    const scene: NativeSlideScene = {
+      fallbackCount: 0,
+      elements: [
+        {
+          kind: 'text',
+          bounds: { x: 100, y: 80, w: 160, h: 40 },
+          text: 'Understand',
+          color: { color: '9B9A92', transparency: 0 },
+          fontFace: 'Arial',
+          fontSize: 14,
+          bold: true,
+          italic: false,
+          align: 'center',
+          valign: 'middle',
+          wrap: false,
+          fill: { color: 'FFFFFF', transparency: 0 },
+          line: { color: 'E3E2DD', transparency: 0, width: 1 },
+          radius: 4,
+          margin: [7, 15, 7, 15],
+        },
+      ],
+    };
+
+    const blob = await buildNativePptx([scene], 'Chip');
+    const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
+    const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
+
+    expect(slideXml).toContain('Understand');
+    expect(slideXml).toMatch(/<a:bodyPr[^>]* wrap="none"/);
+  });
+
+  it('maps a single-sided accent to a fill plus strip — not a full outline', () => {
+    const shapes = shapesFromBoxStyle({
+      fill: undefined,
+      borders: [{ side: 'left', width: 6, color: { color: 'F54E00', transparency: 0 } }],
+      radius: 0,
+      opacity: 1,
+      bounds: { x: 100, y: 200, w: 800, h: 120 },
+    });
+
+    expect(shapes).toHaveLength(1);
+    expect(shapes[0]).toMatchObject({
+      kind: 'shape',
+      bounds: { x: 100, y: 200, w: 6, h: 120 },
+      fill: { color: 'F54E00', transparency: 0 },
+    });
+  });
+
+  it('maps asymmetric accent borders to a fill shape plus a thin strip', () => {
+    const shapes = shapesFromBoxStyle({
+      fill: { color: '0C0C0C', transparency: 0 },
+      borders: [
+        { side: 'top', width: 3, color: { color: 'E4002B', transparency: 0 } },
+        { side: 'right', width: 1, color: { color: '2A2A2A', transparency: 0 } },
+        { side: 'bottom', width: 1, color: { color: '2A2A2A', transparency: 0 } },
+        { side: 'left', width: 1, color: { color: '2A2A2A', transparency: 0 } },
+      ],
+      radius: 4,
+      opacity: 1,
+      bounds: { x: 100, y: 200, w: 400, h: 160 },
+    });
+
+    expect(shapes).toHaveLength(2);
+    expect(shapes[0]).toMatchObject({
+      kind: 'shape',
+      bounds: { x: 100, y: 200, w: 400, h: 160 },
+      fill: { color: '0C0C0C', transparency: 0 },
+      line: { color: '2A2A2A', transparency: 0, width: 1 },
+      radius: 4,
+    });
+    expect(shapes[1]).toMatchObject({
+      kind: 'shape',
+      bounds: { x: 100, y: 200, w: 400, h: 3 },
+      fill: { color: 'E4002B', transparency: 0 },
+      radius: 0,
+    });
+  });
+
+  it('keeps uniform borders as a single outlined shape with a visible stroke', () => {
+    const shapes = shapesFromBoxStyle({
+      fill: { color: 'FFFFFF', transparency: 0 },
+      borders: [
+        { side: 'top', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
+        { side: 'right', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
+        { side: 'bottom', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
+        { side: 'left', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
+      ],
+      radius: 4,
+      opacity: 1,
+      bounds: { x: 0, y: 0, w: 200, h: 100 },
+    });
+
+    expect(shapes).toHaveLength(1);
+    expect(shapes[0]).toMatchObject({
+      kind: 'shape',
+      fill: { color: 'FFFFFF', transparency: 0 },
+      line: { color: 'E3E2DD', transparency: 0, width: 1 },
+    });
+  });
+
+  it('keeps dark-card hairlines at least 1pt so Google Slides shows them', () => {
+    const shapes = shapesFromBoxStyle({
+      fill: { color: '0C0C0C', transparency: 0 },
+      borders: [
+        { side: 'top', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
+        { side: 'right', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
+        { side: 'bottom', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
+        { side: 'left', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
+      ],
+      radius: 4,
+      opacity: 1,
+      bounds: { x: 0, y: 0, w: 400, h: 160 },
+    });
+
+    expect(shapes).toHaveLength(1);
+    expect(shapes[0]).toMatchObject({
+      line: { color: 'E4002B', transparency: 0, width: 1 },
+    });
   });
 });

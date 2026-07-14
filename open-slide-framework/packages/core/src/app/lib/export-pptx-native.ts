@@ -47,6 +47,16 @@ const GOOGLE_SLIDES_SAFE_FONTS = new Set(
 type Bounds = { x: number; y: number; w: number; h: number };
 type Color = { color: string; transparency: number };
 
+export type NativeTextRun = {
+  text: string;
+  color: Color;
+  fontFace: string;
+  fontSize: number;
+  bold: boolean;
+  italic: boolean;
+  breakLine?: boolean;
+};
+
 export type NativeSceneElement =
   | {
       kind: 'shape';
@@ -59,6 +69,7 @@ export type NativeSceneElement =
       kind: 'text';
       bounds: Bounds;
       text: string;
+      runs?: NativeTextRun[];
       color: Color;
       fontFace: string;
       fontSize: number;
@@ -66,6 +77,13 @@ export type NativeSceneElement =
       italic: boolean;
       align: 'left' | 'center' | 'right' | 'justify';
       valign: 'top' | 'middle' | 'bottom';
+      /** false for nowrap / single-line chips — PPTX wrap + font metrics otherwise split words. */
+      wrap?: boolean;
+      /** When set, text is one editable frame with fill/stroke — not a shape under a floating text box. */
+      fill?: Color;
+      line?: Color & { width: number };
+      radius?: number;
+      margin?: [number, number, number, number];
     }
   | {
       kind: 'image';
@@ -183,19 +201,35 @@ export async function extractNativeSlideScene(
     }
 
     if (hasUnsupportedDecoration(style) || hasVisiblePseudoElement(element)) {
-      elements.push(await rasterize(element, rect, frameRect, true));
+      // Bake children into the raster so we don't stack a decoration image
+      // under separate native child shapes (hard to edit in PowerPoint).
+      elements.push(await rasterize(element, rect, frameRect, false));
       fallbackCount++;
-    } else {
-      const shape = shapeFromElement(element, rect, frameRect);
+      return;
+    }
+
+    const shapes = shapesFromElement(element, rect, frameRect);
+    const filledCard = tryBuildFilledTextCard(element, style, rect, frameRect, shapes);
+    if (filledCard) {
+      for (const shape of shapes) {
+        if (shape.kind !== 'shape') continue;
+        if (isMainCardShape(shape.bounds, filledCard.bounds)) continue;
+        elements.push(shape);
+      }
+      elements.push(filledCard);
+      return;
+    }
+
+    for (const shape of shapes) {
       if (
-        shape?.kind === 'shape' &&
+        shape.kind === 'shape' &&
         shape.fill &&
         !shape.line &&
         shape.fill.transparency === 0 &&
         coversFrame(rect, frameRect)
       ) {
         background = shape.fill;
-      } else if (shape) {
+      } else {
         elements.push(shape);
       }
     }
@@ -270,11 +304,33 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
             : { color: 'FFFFFF', transparency: 100 },
         });
       } else if (element.kind === 'text') {
-        slide.addText(element.text, {
+        const textOptions: {
+          x: number;
+          y: number;
+          w: number;
+          h: number;
+          margin: number | [number, number, number, number];
+          fit: 'shrink';
+          breakLine: boolean;
+          wrap: boolean;
+          color: string;
+          transparency: number;
+          fontFace: string;
+          fontSize: number;
+          bold: boolean;
+          italic: boolean;
+          align: 'left' | 'center' | 'right' | 'justify';
+          valign: 'top' | 'middle' | 'bottom';
+          fill?: { color: string; transparency: number };
+          line?: { color: string; transparency: number; width: number };
+          shape?: typeof pptx.ShapeType.roundRect | typeof pptx.ShapeType.rect;
+          rectRadius?: number;
+        } = {
           ...position,
-          margin: 0,
+          margin: element.margin ?? 0,
           fit: 'shrink',
           breakLine: false,
+          wrap: element.wrap ?? true,
           color: element.color.color,
           transparency: element.color.transparency,
           fontFace: googleSlidesFontFace(element.fontFace),
@@ -283,7 +339,43 @@ export async function buildNativePptx(scenes: NativeSlideScene[], title: string)
           italic: element.italic,
           align: element.align,
           valign: element.valign,
-        });
+        };
+        if (element.fill || element.line) {
+          textOptions.fill = element.fill
+            ? { color: element.fill.color, transparency: element.fill.transparency }
+            : { color: 'FFFFFF', transparency: 100 };
+          textOptions.line = element.line
+            ? {
+                color: element.line.color,
+                transparency: element.line.transparency,
+                width: element.line.width,
+              }
+            : { color: 'FFFFFF', transparency: 100 };
+          textOptions.shape =
+            (element.radius ?? 0) > 0 ? pptx.ShapeType.roundRect : pptx.ShapeType.rect;
+          if ((element.radius ?? 0) > 0) {
+            textOptions.rectRadius = normalizedRadius(element.radius ?? 0, element.bounds);
+          }
+        }
+        if (element.runs && element.runs.length > 0) {
+          slide.addText(
+            element.runs.map((run) => ({
+              text: run.text,
+              options: {
+                color: run.color.color,
+                transparency: run.color.transparency,
+                fontFace: googleSlidesFontFace(run.fontFace),
+                fontSize: run.fontSize,
+                bold: run.bold,
+                italic: run.italic,
+                breakLine: run.breakLine ?? false,
+              },
+            })),
+            textOptions,
+          );
+        } else {
+          slide.addText(element.text, textOptions);
+        }
       } else {
         slide.addImage({
           ...position,
@@ -550,31 +642,280 @@ function freezeForCapture(root: HTMLElement): void {
   }
 }
 
-function shapeFromElement(
+type BorderSide = 'top' | 'right' | 'bottom' | 'left';
+type BorderEdge = { side: BorderSide; width: number; color: Color };
+
+const BORDER_SIDES: BorderSide[] = ['top', 'right', 'bottom', 'left'];
+
+function readBorderEdges(style: CSSStyleDeclaration): BorderEdge[] {
+  const edges: BorderEdge[] = [];
+  for (const side of BORDER_SIDES) {
+    const cap = side[0]!.toUpperCase() + side.slice(1);
+    const width = Number.parseFloat(style.getPropertyValue(`border-${side}-width`));
+    const borderStyle = style.getPropertyValue(`border-${side}-style`);
+    const color = resolveCssColor(style.getPropertyValue(`border-${side}-color`));
+    if (!Number.isFinite(width) || width <= 0 || borderStyle === 'none' || !color) continue;
+    edges.push({ side, width, color });
+  }
+  return edges;
+}
+
+function bordersAreUniform(edges: BorderEdge[]): boolean {
+  // A single-sided accent must not become a full outline — treat incomplete
+  // edge sets as asymmetric so the accent path emits a strip instead.
+  if (edges.length !== 4) return false;
+  const first = edges[0]!;
+  return edges.every(
+    (edge) =>
+      Math.abs(edge.width - first.width) < 0.05 &&
+      edge.color.color === first.color.color &&
+      Math.abs(edge.color.transparency - first.color.transparency) < 0.5,
+  );
+}
+
+/** Google Slides drops sub-point strokes; keep outlines visible. */
+function pptxStrokeWidthPt(widthPx: number): number {
+  return Math.max(1, widthPx * PX_TO_PT);
+}
+
+function accentStripBounds(side: BorderSide, width: number, bounds: Bounds): Bounds {
+  switch (side) {
+    case 'top':
+      return { x: bounds.x, y: bounds.y, w: bounds.w, h: width };
+    case 'bottom':
+      return { x: bounds.x, y: bounds.y + bounds.h - width, w: bounds.w, h: width };
+    case 'left':
+      return { x: bounds.x, y: bounds.y, w: width, h: bounds.h };
+    case 'right':
+      return { x: bounds.x + bounds.w - width, y: bounds.y, w: width, h: bounds.h };
+  }
+}
+
+/** Build native PPTX shapes from a box's fill + borders. Asymmetric accent
+ *  borders become thin strips instead of a full outline in the accent color. */
+export function shapesFromBoxStyle(opts: {
+  fill?: Color;
+  borders: BorderEdge[];
+  radius: number;
+  opacity: number;
+  bounds: Bounds;
+}): NativeSceneElement[] {
+  const { fill, borders, radius, opacity, bounds } = opts;
+  if (!fill && borders.length === 0) return [];
+
+  const shapes: NativeSceneElement[] = [];
+  const combinedFill = fill ? combineOpacity(fill, opacity) : undefined;
+
+  if (bordersAreUniform(borders)) {
+    const edge = borders[0];
+    shapes.push({
+      kind: 'shape',
+      bounds,
+      fill: combinedFill,
+          line: edge
+        ? {
+            ...combineOpacity(edge.color, opacity),
+            width: pptxStrokeWidthPt(edge.width),
+          }
+        : undefined,
+      radius,
+    });
+    return shapes;
+  }
+
+  // Prefer the thinnest shared border as a uniform outline; thicker/different
+  // sides become editable accent strips (e.g. thicker top bar).
+  const sorted = [...borders].sort((a, b) => a.width - b.width);
+  const thinnest = sorted[0]!;
+  const outlineCandidates = borders.filter(
+    (edge) =>
+      Math.abs(edge.width - thinnest.width) < 0.05 &&
+      edge.color.color === thinnest.color.color,
+  );
+  const useOutline = outlineCandidates.length >= 2;
+
+  if (combinedFill || useOutline) {
+    shapes.push({
+      kind: 'shape',
+      bounds,
+      fill: combinedFill,
+      line: useOutline
+        ? {
+            ...combineOpacity(thinnest.color, opacity),
+            width: pptxStrokeWidthPt(thinnest.width),
+          }
+        : undefined,
+      radius,
+    });
+  }
+
+  for (const edge of borders) {
+    const isOutline =
+      useOutline &&
+      Math.abs(edge.width - thinnest.width) < 0.05 &&
+      edge.color.color === thinnest.color.color;
+    if (isOutline) continue;
+    shapes.push({
+      kind: 'shape',
+      bounds: accentStripBounds(edge.side, edge.width, bounds),
+      fill: combineOpacity(edge.color, opacity),
+      radius: 0,
+    });
+  }
+
+  return shapes;
+}
+
+function shapesFromElement(
   element: Element,
   rect: DOMRect,
   frameRect: DOMRect,
-): NativeSceneElement | undefined {
+): NativeSceneElement[] {
   const style = getComputedStyle(element);
-  const fill = resolveCssColor(style.backgroundColor);
-  const borderWidth = Number.parseFloat(style.borderTopWidth);
-  const lineColor = resolveCssColor(style.borderTopColor);
-  const hasLine =
-    Number.isFinite(borderWidth) &&
-    borderWidth > 0 &&
-    style.borderTopStyle !== 'none' &&
-    lineColor !== undefined;
-  if (!fill && !hasLine) return undefined;
-  const opacity = Number.parseFloat(style.opacity);
-  return {
-    kind: 'shape',
-    bounds: relativeBounds(rect, frameRect),
-    fill: fill ? combineOpacity(fill, opacity) : undefined,
-    line: hasLine
-      ? { ...combineOpacity(lineColor, opacity), width: Math.max(0.25, borderWidth * PX_TO_PT) }
-      : undefined,
+  return shapesFromBoxStyle({
+    fill: resolveCssColor(style.backgroundColor),
+    borders: readBorderEdges(style),
     radius: Number.parseFloat(style.borderTopLeftRadius) || 0,
+    opacity: Number.parseFloat(style.opacity),
+    bounds: relativeBounds(rect, frameRect),
+  });
+}
+
+/** Prefer one editable text frame with fill/stroke over a bare shape + floating text. */
+export function tryBuildFilledTextCard(
+  element: Element,
+  style: CSSStyleDeclaration,
+  rect: DOMRect,
+  frameRect: DOMRect,
+  shapes: NativeSceneElement[],
+): Extract<NativeSceneElement, { kind: 'text' }> | undefined {
+  if (coversFrame(rect, frameRect)) return undefined;
+  if (element instanceof HTMLImageElement) return undefined;
+  if (!isTextOnlySubtree(element)) return undefined;
+
+  const main = shapes.find(
+    (shape): shape is Extract<NativeSceneElement, { kind: 'shape' }> =>
+      shape.kind === 'shape' && isMainCardShape(shape.bounds, relativeBounds(rect, frameRect)),
+  );
+  if (!main || (!main.fill && !main.line)) return undefined;
+
+  const runs = collectCardTextRuns(element);
+  if (runs.length === 0) return undefined;
+
+  const first = runs[0]!;
+  const nowrap = style.whiteSpace === 'nowrap' || style.whiteSpace === 'pre';
+  return {
+    kind: 'text',
+    bounds: relativeBounds(rect, frameRect),
+    text: runs.map((run) => run.text).join(runs.some((run) => run.breakLine) ? '\n' : ' '),
+    runs,
+    color: first.color,
+    fontFace: first.fontFace,
+    fontSize: first.fontSize,
+    bold: first.bold,
+    italic: first.italic,
+    align: inferTextAlign(style, rect, rect),
+    valign: inferTextValign(rect, rect, style),
+    wrap: !nowrap,
+    fill: main.fill,
+    line: main.line,
+    radius: main.radius,
+    margin: paddingMarginPt(style),
   };
+}
+
+export function isTextOnlySubtree(root: Element): boolean {
+  const walk = (element: Element, isRoot: boolean): boolean => {
+    if (ATOMIC_RASTER_TAGS.has(element.tagName) || element.tagName === 'IMG') return false;
+    if (!isRoot && hasShapeChrome(getComputedStyle(element))) return false;
+    return Array.from(element.children).every((child) => walk(child, false));
+  };
+  return walk(root, true);
+}
+
+function hasShapeChrome(style: CSSStyleDeclaration): boolean {
+  return Boolean(resolveCssColor(style.backgroundColor)) || readBorderEdges(style).length > 0;
+}
+
+function isMainCardShape(shapeBounds: Bounds, cardBounds: Bounds): boolean {
+  return (
+    Math.abs(shapeBounds.x - cardBounds.x) < 1 &&
+    Math.abs(shapeBounds.y - cardBounds.y) < 1 &&
+    Math.abs(shapeBounds.w - cardBounds.w) < 1 &&
+    Math.abs(shapeBounds.h - cardBounds.h) < 1
+  );
+}
+
+export function collectCardTextRuns(root: Element): NativeTextRun[] {
+  const runs: NativeTextRun[] = [];
+
+  const walk = (element: Element) => {
+    for (const node of element.childNodes) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const parent = node.parentElement;
+        if (!parent) continue;
+        const style = getComputedStyle(parent);
+        const text = normalizeText(node.textContent ?? '', style.whiteSpace);
+        if (!text) continue;
+        runs.push(textRunFromStyle(text, style));
+        continue;
+      }
+      if (!(node instanceof Element)) continue;
+      const before = runs.length;
+      walk(node);
+      if (runs.length > before && isBlockish(node)) {
+        runs[runs.length - 1]!.breakLine = true;
+      }
+    }
+  };
+
+  walk(root);
+  if (runs.length > 0) runs[runs.length - 1]!.breakLine = false;
+  return runs;
+}
+
+function textRunFromStyle(text: string, style: CSSStyleDeclaration): NativeTextRun {
+  const weight = Number.parseInt(style.fontWeight, 10);
+  const fontSizePx = Number.parseFloat(style.fontSize);
+  return {
+    text,
+    color: combineOpacity(
+      resolveCssColor(style.color) ?? { color: '000000', transparency: 0 },
+      Number.parseFloat(style.opacity),
+    ),
+    fontFace: style.fontFamily.split(',')[0]?.replace(/['"]/g, '').trim() || 'Arial',
+    fontSize: Math.max(1, fontSizePx * PX_TO_PT),
+    bold: Number.isFinite(weight) ? weight >= 600 : style.fontWeight === 'bold',
+    italic: style.fontStyle === 'italic' || style.fontStyle === 'oblique',
+  };
+}
+
+function isBlockish(element: Element): boolean {
+  const style = getComputedStyle(element);
+  if (
+    style.display.includes('block') ||
+    style.display.includes('flex') ||
+    style.display.includes('grid') ||
+    style.display === 'list-item'
+  ) {
+    return true;
+  }
+  return ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'SECTION', 'ARTICLE'].includes(
+    element.tagName,
+  );
+}
+
+function paddingMarginPt(style: CSSStyleDeclaration): [number, number, number, number] {
+  const toPt = (value: string) => {
+    const px = Number.parseFloat(value);
+    return Number.isFinite(px) ? Math.max(0, px * PX_TO_PT) : 0;
+  };
+  return [
+    toPt(style.paddingTop),
+    toPt(style.paddingRight),
+    toPt(style.paddingBottom),
+    toPt(style.paddingLeft),
+  ];
 }
 
 function textFromNode(
@@ -602,6 +943,7 @@ function textFromNode(
     italic: style.fontStyle === 'italic' || style.fontStyle === 'oblique',
     align: inferTextAlign(style, rect, containerRect),
     valign: inferTextValign(rect, containerRect, style),
+    wrap: !(style.whiteSpace === 'nowrap' || style.whiteSpace === 'pre'),
   };
 }
 
@@ -644,9 +986,11 @@ function blobToDataUri(blob: Blob): Promise<string> {
 }
 
 function hasUnsupportedDecoration(style: CSSStyleDeclaration): boolean {
+  // Intentionally ignore boxShadow — shadows force a decoration raster that
+  // stacks under native child shapes and makes PowerPoint editing painful.
+  // Prefer a clean editable shape over a matching drop shadow.
   return (
     style.backgroundImage !== 'none' ||
-    style.boxShadow !== 'none' ||
     style.filter !== 'none' ||
     (style.maskImage !== undefined && style.maskImage !== 'none')
   );

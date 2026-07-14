@@ -13,6 +13,6 @@ Author slides as React components under `my-deck/slides/<id>/index.tsx`. Read `A
 - Inspector `@slide-comment` markers → `apply-comments` skill
 - New theme → `create-theme` skill
 - "This page" / "this element" without a name → `current-slide` skill (read `node_modules/.open-slide/current.json`)
-- Any slide code edit → `slide-authoring` skill first
+- Any slide code edit → read `slide-authoring` **and** `pptx-design` first (every page must stay PPTX/Google Slides–editable; do not wait for an export request)
 
 Do not modify `package.json`, `open-slide.config.ts`, or slides you were not asked to touch. No new dependencies.

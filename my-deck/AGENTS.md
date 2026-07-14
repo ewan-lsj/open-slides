@@ -20,7 +20,8 @@ Skills live in `.cursor/skills/`. Read the relevant `SKILL.md` when a workflow a
 - **Applying inspector comments** (`@slide-comment` markers in a page) — `apply-comments`.
 - **Creating or extracting a theme** — `create-theme`. Themes live as markdown under `themes/<id>.md` and are read by `create-slide` before authoring.
 - **Resolving "this page" / "this element"** — when the user references the current slide or selection without naming it, read `current-slide`. It reads the dev server's `node_modules/.open-slide/current.json` for slide, page, and inspector-picked element.
-- **Any other slide edit** — read `slide-authoring` before writing. File contract, 1920×1080 canvas, type scale, palette, layout, assets, self-review checklist, and anti-patterns. `create-slide` and `apply-comments` defer to it for the *how*.
+- **Any slide edit (required)** — read `slide-authoring` **and** `pptx-design` before writing. Authoring covers canvas/type/layout; PPTX design keeps boxes editable (fill contrast, one text frame per card, nowrap chips). Do not wait for an export request.
+- **Dev server / PPTX download** — `ensure-dev-server`. PPTX export runs in the browser; keep Vite running.
 
 Keep this file short: hard rules only. Deeper guidance lives in the skills above.
 
