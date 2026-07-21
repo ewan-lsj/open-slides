@@ -14,5 +14,6 @@ Author slides as React components under `my-deck/slides/<id>/index.tsx`. Read `A
 - New theme → `create-theme` skill
 - "This page" / "this element" without a name → `current-slide` skill (read `node_modules/.open-slide/current.json`)
 - Any slide code edit → read `slide-authoring` **and** `pptx-design` first (every page must stay PPTX/Google Slides–editable; do not wait for an export request)
+- Spin up / start servers → both **5173** (published core) and **5174** (local editable PPTX); see `spin-up-dev-servers` rule
 
 Do not modify `package.json`, `open-slide.config.ts`, or slides you were not asked to touch. No new dependencies.

@@ -1,0 +1,36 @@
+---
+description: On open-slide startup, ensure both Vite servers (5173 + 5174) are running
+alwaysApply: true
+---
+
+# Spin up both open-slide servers
+
+When the user asks to start / spin up open-slide, or at the start of a session that needs the deck preview or PPTX export, **ensure both** servers are healthy before continuing:
+
+| Port | Role | How to start (from `my-deck/`) |
+|------|------|-------------------------------|
+| **5173** | Published `@open-slide/core` (image PPTX) | `export PATH="$HOME/.local/node-v22.16.0/bin:$PATH" && npm run dev` |
+| **5174** | Local framework core (editable native PPTX) | `node ../open-slide-framework/packages/core/bin.js dev --port 5174 --no-skills-check` |
+
+## Check
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5173/
+curl -s -o /dev/null -w "%{http_code}" http://localhost:5174/
+```
+
+`200` on a port → leave it alone. Only start the missing one(s). Do not kill a healthy listener unless the user asked for a restart.
+
+## Start missing servers
+
+1. Run each missing server in the background from `my-deck/` (`block_until_ms: 0`).
+2. For **5174**, if `open-slide-framework/packages/core/dist` is missing or framework source changed this session, first:
+   `cd ../open-slide-framework && pnpm --filter @open-slide/core build`
+3. Wait until each prints `Local: http://localhost:<port>/`, then re-`curl` for `200`.
+
+## Use which URL
+
+- Everyday preview / inspector → http://localhost:5173/
+- Editable **Export as PPTX** (native text/shapes) → http://localhost:5174/
+
+Follow `.cursor/skills/ensure-dev-server` and `my-deck/.cursor/skills/run-editable-dev` for details. Never start a second process on a port that already returns 200.
