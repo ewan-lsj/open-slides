@@ -543,16 +543,16 @@ const Cover: Page = () => (
       </div>
       <Eyebrow onDark>Aviva PMI migration · demo storyboard</Eyebrow>
       <HeroTitle>
-        Legacy .NET to .NET 8,
+        Making your .NET migration
         <br />
-        live in Cursor.
+        cheaper to finish.
       </HeroTitle>
       <div style={{ margin: '40px 0 36px' }}>
         <AccentRule width={240} />
       </div>
       <Lead onDark width={1380}>
-        A private-medical-insurance service migrated in front of you — comprehension, tests,
-        migration, review, security and documentation in one session.
+        We take one private-medical-insurance endpoint off WCF and EF6 today, prove nothing changed
+        for the customer, and leave the audit trail behind. All of it live.
       </Lead>
     </FadeUp>
     <div
@@ -575,13 +575,14 @@ const Context: Page = () => (
     <Styles />
     <FadeUp>
       <Eyebrow>The context</Eyebrow>
-      <Title>You are already running this migration.</Title>
+      <Title>You are already paying for this migration.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 36 }}>
         <Lead>
-          Nothing here asks you to change direction. The programme, the target framework and the
-          appetite for AI assistance are already in place.
+          Nothing in this deck asks you to change direction or buy a platform. The destination is
+          set, the budget is committed, and your engineers already work with AI. The variable left is
+          how long the programme takes.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 44 }}>
@@ -589,24 +590,24 @@ const Context: Page = () => (
           <Card
             label="The estate"
             heading="4.x, with a SOAP tail"
-            body="C# on .NET Framework 4.x, ASP.NET MVC 5, WCF/SOAP services, EF6 over SQL Server."
+            body="C# on .NET Framework 4.x, ASP.NET MVC 5, WCF/SOAP services, EF6 over SQL Server. Every one of those is a slice someone has to move."
           />
           <Card
             label="In flight"
             heading="4.x → .NET 6, funded"
-            body="A live migration programme. .NET 8 is the sensible landing zone from here in 2026."
+            body="The programme exists and has a budget line against it. .NET 8 is the sensible place to land from here."
           />
           <Card
             label="Appetite"
             heading="Copilot at 1,750 users"
-            body="And the flagship Bamboo policy system already moved to Azure. AI assistance is not a new argument here."
+            body="Bamboo is on Azure and Copilot went out at scale. Nobody here needs persuading that AI belongs in the toolchain."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          So the question is not whether to modernise. It is how much faster the programme you are
-          already funding can move.
+          So the question is not whether. It is how many quarters this takes, and what you can put in
+          front of a regulator at the end of it.
         </Kicker>
       </FadeUp>
     </Body>
@@ -618,38 +619,39 @@ const Problem: Page = () => (
     <Styles />
     <FadeUp>
       <Eyebrow>The problem</Eyebrow>
-      <Title>Migration is priced in dev-years, not sprints.</Title>
+      <Title>The overrun is never in the new code.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 36 }}>
         <Lead>
-          Writing the new endpoint is the cheap part. Three other costs set the pace of every legacy
-          slice, and they are the ones that overrun.
+          Writing the .NET 8 endpoint is a day's work. The quarter goes on everything around it:
+          working out what the old code promised, proving the new one behaves identically, and
+          getting it written up so assurance will sign it off.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 44 }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 28 }}>
           <Card
-            label="Cost one"
-            heading="Comprehension"
-            body="Nobody left on the team wrote the WCF service. Reading it back is weeks of archaeology."
+            label="Where the time goes"
+            heading="Weeks of archaeology"
+            body="Nobody left on the team wrote the WCF service, so every slice starts with reading it back."
           />
           <Card
-            label="Cost two"
-            heading="Proof"
-            body="Behaviour parity is asserted in a PR description far more often than it is demonstrated."
+            label="Where the risk sits"
+            heading="Parity nobody can prove"
+            body="Behaviour parity usually gets asserted in a pull request rather than demonstrated by a test."
           />
           <Card
-            label="Cost three"
-            heading="Paper trail"
-            body="A regulated, phased programme needs evidence, and writing it up competes with delivery."
+            label="Where audit bites"
+            heading="Evidence written late"
+            body="A phased programme needs a record per slice, and that write-up always loses to delivery pressure."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          Today we take all three at once: read it, prove it, document it — in the same session as
-          the change.
+          Those three are what we go after today. The new code is the easy bit, so it gets the least
+          airtime.
         </Kicker>
       </FadeUp>
     </Body>
@@ -661,35 +663,35 @@ const Agenda: Page = () => (
     <Styles />
     <FadeUp>
       <Eyebrow>The arc</Eyebrow>
-      <Title>What you will watch us do.</Title>
+      <Title>Here is the running order, and what each part is for.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.12} style={{ marginTop: 40 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <ActRow
             act="Act 0"
-            heading="Set the ground rules"
-            body="A synthetic stand-in for your stack, plus a validated OpenAPI spec for the PMI service."
+            heading="Show our working"
+            body="A synthetic stand-in for your stack, plus the PMI contract written down as OpenAPI."
           />
           <ActRow
             act="Act 1"
-            heading="Make legacy legible"
-            body="Cursor explains the WCF/SOAP and EF6 code, including the rules buried inside it."
+            heading="Read the legacy back"
+            body="Cursor explains the WCF and EF6 code, including the policy rules nobody documented."
           />
           <ActRow
             act="Act 2"
-            heading="Migrate one real slice"
-            body="GET /ncd through four SDLC scenes: ticket to PR, code review, security, documentation."
+            heading="Move one real slice"
+            body="GET /ncd through your four gates: delivery, code review, security, and the write-up."
           />
           <ActRow
             act="Act 3"
-            heading="Show the payoff"
-            body="A modern PMI web app with a live toggle between the legacy and .NET 8 backends."
+            heading="Show the customer view"
+            body="The same PMI app running on either backend, switched live, with identical results."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.22} style={{ marginTop: 36 }}>
-        <Kicker>One slice, end to end. Judge the method on it, not on the slideware.</Kicker>
+        <Kicker>One slice, all the way through. Judge us on that rather than on the slides.</Kicker>
       </FadeUp>
     </Body>
   </div>
@@ -700,26 +702,27 @@ const HonestFraming: Page = () => (
     <Styles />
     <FadeUp>
       <Eyebrow>Act 0 · Honest framing</Eyebrow>
-      <Title>We built a faithful stand-in, not a guess.</Title>
+      <Title>We did not ask for your code, and we do not need it.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          Your code is private and should stay that way. So we reconstructed the shape of it from
-          public sources, wrote the PMI contract down as OpenAPI, and labelled every assumption.
+          Getting a copy of a live policy system out of the building for a vendor demo would be a bad
+          idea, and your security team would be right to refuse. So we rebuilt the shape of it from
+          public sources instead, and wrote the PMI contract down as OpenAPI.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 36 }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 28 }}>
           <Card
             label="Sourced"
-            heading="The stack and the direction"
-            body="Framework 4.x, MVC 5, WCF, EF6, SQL Server; the .NET 6 programme; Bamboo on Azure; Copilot at 1,750 users."
+            heading="The stack and direction"
+            body="Framework 4.x, MVC 5, WCF, EF6, SQL Server, the .NET 6 programme, Bamboo on Azure, Copilot at 1,750 users."
           />
           <Card
             label="Inferred"
-            heading="The PMI domain detail"
-            body="Endpoints, no-claims-discount rules and table names — reconstructed, validated against the spec, and marked as inferred in the repo."
+            heading="The PMI detail"
+            body="Endpoints, no-claims-discount rules and table names. Reconstructed, checked against the spec, and flagged as inferred in the repo."
             accent
           />
         </div>
@@ -736,13 +739,13 @@ const Comprehension: Page = () => (
     <Styles />
     <FadeUp>
       <Eyebrow>Act 1 · Legacy comprehension</Eyebrow>
-      <Title>Legacy becomes legible in seconds, not weeks.</Title>
+      <Title>Understanding the old code stops being a two-week job.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          We open the crustiest file in the service — a WCF operation with EF6 queries and a decade
-          of policy rules inlined — and ask Cursor what it actually promises.
+          We open the worst file in the service, a WCF operation with EF6 queries and years of policy
+          rules inlined, and ask what it actually promises. You get the answer in the meeting.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 40 }}>
@@ -750,24 +753,23 @@ const Comprehension: Page = () => (
           <Card
             label="Answer 01"
             heading="The contract"
-            body="The SOAP operation, its message shapes, its status and fault behaviour."
+            body="The SOAP operation, its message shapes, and how it behaves when things go wrong."
           />
           <Card
             label="Answer 02"
             heading="The data path"
-            body="Which EF6 queries run, against which tables, and where the query is hand-built."
+            body="Which EF6 queries run, against which tables, and where a query is still hand-built."
           />
           <Card
             label="Answer 03"
             heading="The hidden rules"
-            body="The no-claims-discount logic living in the service layer, including the edge cases."
+            body="The no-claims-discount logic sitting in the service layer, edge cases included. That is the part that bites."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          The expensive part of legacy is not writing new code. It is knowing what the old code
-          promised.
+          This is where migration time actually goes, and it is the cheapest place to buy some back.
         </Kicker>
       </FadeUp>
     </Body>
@@ -778,16 +780,16 @@ const ActTwoDivider: Page = () => (
   <div style={{ ...darkPage, justifyContent: 'center' }}>
     <Styles />
     <FadeUp>
-      <Eyebrow onDark>Act 2 · The enterprise SDLC</Eyebrow>
+      <Eyebrow onDark>Act 2 · Your SDLC, end to end</Eyebrow>
       <Title size={96} onDark>
-        One slice. Four gates.
+        The part assurance cares about
       </Title>
       <div style={{ margin: '36px 0 34px' }}>
         <AccentRule width={180} />
       </div>
       <Lead onDark width={1420}>
-        GET /ncd, from Jira ticket to Confluence record — through the four gates your programme
-        already runs, with nothing skipped to make the demo look quick.
+        One endpoint, GET /ncd, taken from a Jira ticket to a Confluence record. We do not skip a gate
+        to make the demo look quick.
       </Lead>
     </FadeUp>
     <FadeUp delay={0.16} style={{ marginTop: 48 }}>
@@ -805,14 +807,14 @@ const SceneOne: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Act 2 · Scene 1 — Jira to code to PR</Eyebrow>
-      <Title>A ticket becomes a merged .NET 8 slice.</Title>
+      <Eyebrow>Act 2 · Scene 1 · Jira to code to PR</Eyebrow>
+      <Title>The slice moves in one sitting, with proof attached.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          AVH-207: migrate GET /ncd off WCF and EF6. Cursor reads the ticket, then works the slice in
-          the order a careful engineer would — tests before surgery.
+          AVH-207 says take GET /ncd off WCF and EF6. Watch the order Cursor works in, because the
+          order is what makes the result defensible later.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 44 }}>
@@ -820,34 +822,34 @@ const SceneOne: Page = () => (
           <FlowCard
             step="Step 01"
             label="Read the ticket"
-            body="AVH-207 and the /ncd slice, with the OpenAPI contract as the source of truth."
+            body="AVH-207 and the /ncd slice, with the OpenAPI contract treated as the source of truth."
           />
           <Arrow />
           <FlowCard
             step="Step 02"
             label="Tests on legacy"
-            body="Characterisation tests generated from the spec, run against the legacy endpoint — green."
+            body="Characterisation tests written from the spec and run against the old endpoint first. All green."
             tone="pass"
           />
           <Arrow />
           <FlowCard
             step="Step 03"
             label="Migrate the slice"
-            body="WCF and EF6 to .NET 8 Minimal API and EF Core, across every file the change touches."
+            body="WCF and EF6 become .NET 8 Minimal API and EF Core, across every file the change touches."
             tone="accent"
           />
           <Arrow />
           <FlowCard
             step="Step 04"
             label="Same tests, modern"
-            body="The identical suite re-run against the new endpoint — green, then a PR with the evidence."
+            body="The identical suite re-run on the new endpoint. Green again, then a PR carrying both runs."
             tone="pass"
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          Parity is not a sentence in the PR description. It is the same suite, run twice.
+          Nobody has to take parity on trust. It is the same suite, run twice, and the PR shows both.
         </Kicker>
       </FadeUp>
     </Body>
@@ -858,34 +860,34 @@ const SceneTwo: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Act 2 · Scene 2 — agentic code review</Eyebrow>
-      <Title>Your migration rules do the first review.</Title>
+      <Eyebrow>Act 2 · Scene 2 · Code review</Eyebrow>
+      <Title>The rules stop depending on who reviews the PR.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          The standards live in the repository as Cursor Skills, so the review enforces Aviva rules
-          rather than generic advice — and it runs before a human spends attention.
+          Your migration standards live in the repository, so the first review happens before a human
+          opens the pull request. On this slice it caught something expensive.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 40 }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 28 }}>
           <Card
             label="The rules, in the repo"
-            heading="Contract parity, no behaviour drift"
-            body="Every response field matches the spec. Every legacy branch is accounted for or explicitly retired, with a reason."
+            heading="Contract parity, no drift"
+            body="Every response field matches the spec. Every legacy branch is either carried over or retired on purpose, with a reason."
           />
           <Card
             label="What it caught"
-            heading="A dropped protected-NCD cap"
-            body="The maximum-discount cap on protected no-claims discount did not survive the rewrite. Flagged, explained, fixed."
+            heading="A dropped discount cap"
+            body="The maximum cap on protected no-claims discount did not survive the rewrite. Flagged, explained and fixed before review."
             accent
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          This is the class of defect that reaches production. A wiki page would not have caught it.
+          That is the kind of defect that gets past people and turns into customer remediation.
         </Kicker>
       </FadeUp>
     </Body>
@@ -896,14 +898,14 @@ const SceneThree: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Act 2 · Scene 3 — security review</Eyebrow>
-      <Title>Migration is when you retire inherited risk.</Title>
+      <Eyebrow>Act 2 · Scene 3 · Security</Eyebrow>
+      <Title>You can take real vulnerabilities off the books.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          We run the security gate inside the same loop as the change, using the scanners you already
-          own rather than a tool you would have to buy.
+          The security gate runs in the same loop as the change, using scanners you already own and
+          pay for. On this slice it found something that predates the migration.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 40 }}>
@@ -911,24 +913,24 @@ const SceneThree: Page = () => (
           <Card
             label="The gate"
             heading="Your scanners, in the loop"
-            body="SonarQube and Checkmarx, with Semgrep, CodeQL and Trivy as the open-source fallback."
+            body="SonarQube and Checkmarx here, with Semgrep, CodeQL and Trivy if you would rather stay open source."
           />
           <Card
             label="The find"
             heading="Inherited SQL injection"
-            body="A concatenated query in the legacy no-claims-discount lookup, carried forward untouched."
+            body="A concatenated query in the old no-claims-discount lookup, carried forward with nobody noticing."
             accent
           />
           <Card
             label="The fix"
             heading="Parameterised, re-scanned"
-            body="Rewritten through EF Core, scanned clean, and written up in the pull request."
+            body="Rewritten through EF Core, scanned clean, and written up in the pull request for sign-off."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          The flaw came with the legacy code. Migrating the slice is what finally surfaced it.
+          The flaw was already in the estate. Moving the slice is what put it in front of someone.
         </Kicker>
       </FadeUp>
     </Body>
@@ -939,14 +941,14 @@ const SceneFour: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Act 2 · Scene 4 — impact and documentation</Eyebrow>
-      <Title>The migration audit trail writes itself.</Title>
+      <Eyebrow>Act 2 · Scene 4 · Impact and documentation</Eyebrow>
+      <Title>The write-up stops being a separate job.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          A phased migration in a regulated business lives or dies on evidence. So the last step of
-          the change is the record of the change.
+          A phased migration in a regulated business runs on evidence. If the record is a separate
+          task it slips, so we make it the last step of the change itself.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 44 }}>
@@ -954,32 +956,32 @@ const SceneFour: Page = () => (
           <FlowCard
             step="Step 01"
             label="Assess impact"
-            body="Shared modules touched, and which legacy callers still depend on the old operation."
+            body="Which shared modules the change touches, and which legacy callers still need the old operation."
           />
           <Arrow />
           <FlowCard
             step="Step 02"
             label="Business summary"
-            body="What changed for a PMI policy, what did not, and what a customer would notice."
+            body="What changed for a PMI policy, what did not, and whether a customer would notice."
           />
           <Arrow />
           <FlowCard
             step="Step 03"
             label="Verify against AVH-207"
-            body="Every acceptance criterion checked against what the change actually does."
+            body="Each acceptance criterion checked against what the code actually does now."
           />
           <Arrow />
           <FlowCard
             step="Step 04"
             label="Publish to Confluence"
-            body="A migration record on the page where your programme already keeps them."
+            body="Filed on the page your programme already uses, so nobody has to go hunting for it."
             tone="accent"
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          Documentation stops being the thing that slips when the sprint gets tight.
+          When someone asks how you know the behaviour held, this is the answer, slice by slice.
         </Kicker>
       </FadeUp>
     </Body>
@@ -990,8 +992,8 @@ const Spine: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>The claim that matters</Eyebrow>
-      <Title>Same contract. Same tests. Green before and after.</Title>
+      <Eyebrow>The claim to hold us to</Eyebrow>
+      <Title>Nothing changed for the customer, and we can prove it.</Title>
     </FadeUp>
     <Body>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 32 }}>
@@ -1017,7 +1019,7 @@ const Spine: Page = () => (
             The contract · OpenAPI · GET /ncd
           </div>
           <div style={{ fontSize: 28, lineHeight: 1.35, color: colors.body, maxWidth: 1520 }}>
-            Request shape, response shape, status codes and fault semantics — written down and
+            Request shape, response shape, status codes and fault behaviour, all written down and
             validated before a single line moves.
           </div>
         </div>
@@ -1027,7 +1029,7 @@ const Spine: Page = () => (
               label="Before"
               stack=".NET Framework 4.x · WCF/SOAP · EF6 · SQL Server"
               verdict="Suite green"
-              verdictNote="Characterisation tests generated from the contract, run on legacy."
+              verdictNote="Characterisation tests built from the contract, run against the legacy endpoint."
             />
           </Step>
           <Step>
@@ -1040,7 +1042,7 @@ const Spine: Page = () => (
                 padding: '6px 0',
               }}
             >
-              ↓ &nbsp;Migrate the /ncd slice — new stack, untouched contract
+              ↓ &nbsp;Migrate the /ncd slice. New stack, contract untouched.
             </div>
           </Step>
           <Step>
@@ -1048,11 +1050,14 @@ const Spine: Page = () => (
               label="After"
               stack=".NET 8 · ASP.NET Core Minimal API · EF Core · SQL Server"
               verdict="Suite green"
-              verdictNote="The identical tests, unmodified, run on the modern endpoint."
+              verdictNote="The same tests, unmodified, run against the .NET 8 endpoint."
             />
           </Step>
           <Step>
-            <Kicker>Behaviour-preserving, proven rather than asserted. That is the whole spine.</Kicker>
+            <Kicker>
+              If you take one thing from today, take this. Parity is something we can show you, slice
+              by slice, in the pipeline.
+            </Kicker>
           </Step>
         </Steps>
       </div>
@@ -1064,14 +1069,14 @@ const UiPayoff: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Act 3 · The payoff</Eyebrow>
-      <Title>One UI. Two engines. Flip it live.</Title>
+      <Eyebrow>Act 3 · What it looks like from outside</Eyebrow>
+      <Title>The front end does not care which engine is running.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          A modern quote-to-claim PMI app sits on top of both backends. We switch the engine on
-          screen, mid-journey, and the answers do not move.
+          The same PMI app runs on either backend. We switch it on screen halfway through a journey
+          and the numbers stay put, which is also your rollback story.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 40 }}>
@@ -1087,7 +1092,7 @@ const UiPayoff: Page = () => (
           <Card
             label="Journey 01"
             heading="Quote"
-            body="Same premium, same no-claims discount applied, on either engine."
+            body="Same premium, same no-claims discount applied, whichever engine answers."
           />
           <Card
             label="Journey 02"
@@ -1097,14 +1102,14 @@ const UiPayoff: Page = () => (
           <Card
             label="Journey 03"
             heading="Claim"
-            body="Same claim accepted, same discount recalculated afterwards."
+            body="Same claim accepted, and the discount recalculated the same way afterwards."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.3} style={{ marginTop: 36 }}>
         <Kicker>
-          Then we hand the next slice to a Cloud Agent, which opens the follow-on PR while we keep
-          talking.
+          Then we hand the next slice to a Cloud Agent and let it open the follow-on PR while we carry
+          on talking.
         </Kicker>
       </FadeUp>
     </Body>
@@ -1115,34 +1120,34 @@ const Differentiation: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Where this sits</Eyebrow>
-      <Title>Copilot finishes your line. Cursor finishes the migration.</Title>
+      <Eyebrow>How this sits next to Copilot</Eyebrow>
+      <Title>Autocomplete was never going to move a WCF service.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 32 }}>
         <Lead>
-          This is not a swap. 1,750 engineers already have autocomplete, and it earns its keep. The
-          migration work needs something with a longer attention span.
+          Keep Copilot. It earns its keep inside the file and your engineers like it. Migration is a
+          different unit of work, and it needs something that can hold a whole slice at once.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 40 }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 28 }}>
           <Card
             label="Autocomplete"
-            heading="Helps inside the file"
-            body="Completes the next line, suggests the next method, keeps a developer in flow. Scoped to what is on screen."
+            heading="Works inside the file"
+            body="Completes the next line, suggests the next method, keeps a developer moving. Scoped to what is on screen."
           />
           <Card
-            label="Migration teammate"
-            heading="Owns the whole slice"
-            body="Takes a WCF service to .NET 8 across files, writes the tests that prove parity, reviews against your rules, and documents the result."
+            label="Agent"
+            heading="Takes the whole slice"
+            body="Moves a WCF service to .NET 8 across files, writes the tests that prove parity, reviews it against your rules, files the record."
             accent
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          The step up is not better suggestions. It is a unit of work you can hand over and audit.
+          The difference that matters to you is scope: work you can delegate, then audit afterwards.
         </Kicker>
       </FadeUp>
     </Body>
@@ -1153,38 +1158,40 @@ const WhyItLands: Page = () => (
   <div style={lightPage}>
     <Styles />
     <FadeUp>
-      <Eyebrow>Why it lands here</Eyebrow>
-      <Title>This fits the programme you are already running.</Title>
+      <Eyebrow>What it changes for you</Eyebrow>
+      <Title>None of this needs a new platform decision.</Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 36 }}>
         <Lead>
-          No rip and replace, no new platform to justify, no change of destination. The same
-          migration, moving faster, with more evidence behind it.
+          There is no rip and replace here, and no new runtime to defend at architecture review. The
+          programme you approved stays exactly as it is. It just moves quicker, and leaves more
+          evidence behind it.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 44 }}>
         <div style={{ display: 'flex', alignItems: 'stretch', gap: 28 }}>
           <Card
-            label="Economics"
-            heading="Accelerates funded work"
-            body="It attacks the comprehension and proof costs that make legacy slices overrun."
+            label="Cost"
+            heading="Attacks the overrun"
+            body="It goes after the reading and the proving, which is where legacy slices lose their schedule."
           />
           <Card
             label="Control"
             heading="Guardrails you author"
-            body="Your migration rules, your scanners, your review gates — enforced in the loop, not in a wiki."
+            body="Your migration rules, your scanners, your reviewers, enforced in the loop rather than in a wiki."
           />
           <Card
             label="Assurance"
-            heading="Evidence as a by-product"
-            body="Contract tests, security findings and a written record for every slice you move."
+            heading="Evidence per slice"
+            body="Contract tests, security findings and a written record for every endpoint you move."
           />
         </div>
       </FadeUp>
       <FadeUp delay={0.26} style={{ marginTop: 40 }}>
         <Kicker>
-          Worth saying plainly: the agent still needs a reviewer, and the guardrails are the work.
+          Worth saying plainly: someone still reviews the work, and writing the guardrails is real
+          effort. Budget for both.
         </Kicker>
       </FadeUp>
     </Body>
@@ -1197,14 +1204,14 @@ const NextStep: Page = () => (
     <FadeUp>
       <Eyebrow onDark>Next step</Eyebrow>
       <Title size={76} onDark>
-        One real slice. One controlled POC.
+        Now do it on your own code.
       </Title>
     </FadeUp>
     <Body>
       <FadeUp delay={0.1} style={{ marginTop: 36 }}>
         <Lead onDark width={1500}>
-          Everything you have just watched ran on a stand-in. The only test that counts is the same
-          method on your estate, inside your controls.
+          Everything you just watched ran on a stand-in, which is exactly why it proves nothing about
+          your estate. The next step is small, contained, and measurable.
         </Lead>
       </FadeUp>
       <FadeUp delay={0.18} style={{ marginTop: 44 }}>
@@ -1217,12 +1224,12 @@ const NextStep: Page = () => (
           <DarkCard
             label="Step 02"
             heading="Set the guardrails"
-            body="Your migration rules as repo-local skills, your scanners wired into the loop."
+            body="Your migration rules in the repo, your scanners in the loop, your reviewers in the path."
           />
           <DarkCard
             label="Step 03"
-            heading="Measure the delta"
-            body="Time to merge and evidence produced, against your current baseline. Your numbers."
+            heading="Measure it"
+            body="Time to merge and evidence produced, against your own baseline. Your numbers, not ours."
           />
         </div>
       </FadeUp>
@@ -1230,7 +1237,7 @@ const NextStep: Page = () => (
         <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <AccentRule width={120} />
           <div style={{ fontSize: 36, fontWeight: 700, lineHeight: 1.3, color: colors.navyText }}>
-            Legacy in, modern out, contract-proven identical — on your code, not our demo.
+            Then decide on your own evidence, not on our demo.
           </div>
         </div>
       </FadeUp>
@@ -1263,26 +1270,26 @@ export const transition: SlideTransition = {
 };
 
 export const notes: (string | undefined)[] = [
-  'Frame the session in one breath: this is a working migration, not a capability deck. We take one real PMI slice from WCF and EF6 to .NET 8 in front of you, and we prove the behaviour did not change. Say up front that the codebase is synthetic — we get to that on slide five, and it is a feature, not an apology.',
-  'Establish that we did our homework and that we are not selling a change of direction. Framework 4.x with an MVC 5 front end, a WCF/SOAP tail and EF6 over SQL Server; a live 4.x to .NET 6 programme; Bamboo already on Azure; Copilot already at 1,750 users. The message: you have chosen the destination and paid for the ticket. We are here about pace.',
-  'Name the real cost drivers, because they are the ones the audience argues about internally. Comprehension is weeks of archaeology on code whose authors have left. Proof is usually asserted rather than demonstrated. The paper trail slips whenever delivery is tight. If someone pushes back that coding is the bottleneck, ask them what the last migration retrospective actually blamed.',
-  'Set expectations for the next twenty minutes so nobody is waiting for a slide that never comes. Four acts, one slice, and a payoff you can see on screen. Tell them the interesting part is Act 2 and invite them to interrupt during it.',
-  'This is the trust slide — do not rush it. Their code is private and should stay private, so we rebuilt the shape of it from public sources and wrote the PMI contract down as OpenAPI. Everything sourced is labelled sourced; everything inferred is labelled inferred, in the repo, not just in the talk. If the domain detail is wrong, that is useful feedback, not an embarrassment.',
-  'The point is time-to-understanding, not magic. Open the worst file, ask what it promises, and read back the SOAP contract, the EF6 query path and the NCD rules hiding in the service layer. Expect a challenge on whether it can be trusted — the honest answer is that this is a first draft for a human to check, and it beats starting from a blank page.',
-  'Pivot slide — use it to reset attention before the longest stretch of the demo. Say plainly that we are not going to skip gates to make this look fast: the same slice passes build, review, security and documentation. If their SDLC has a fifth gate we have not shown, ask what it is now, while it is cheap to answer.',
-  'The core demo. Emphasise the order: tests first, against the legacy endpoint, generated from the contract. Only then the migration. Then the same suite again on .NET 8. If a test fails after migration, that is the mechanism working, so do not hide it if it happens live.',
-  'Make the point that the review is theirs, not ours. The migration rules live in the repository as skills, so the agent enforces Aviva standards. The dropped protected-NCD cap is the kind of defect that survives human review and lands in production. Note the trade-off honestly: the rules are work to author, and they are the highest-leverage work in the programme.',
-  'Reframe security from blocker to opportunity. The concatenated query came with the legacy code; the migration is what surfaced it. Use whichever scanners they already own — SonarQube and Checkmarx here, Semgrep, CodeQL and Trivy if they prefer open source. The agent fixes and re-scans; a security engineer still signs it off.',
-  'This is the slide that matters to risk and audit, not to engineers. Impact against shared modules and remaining legacy callers, an explanation in business language, verification against AVH-207, then published where the programme already keeps its records. For a phased migration under regulatory scrutiny, the record is not overhead — it is the licence to proceed.',
-  'Slow down here. This is the single most credible claim in the deck, so let the build land: contract, green on legacy, migrate, green on modern. Say the words "proven, not asserted". If they take one thing away, it should be this spine — everything else is speed on top of it.',
-  'The payoff for anyone in the room who does not read C#. Same front end, two engines, switched live mid-journey with identical results. Then start a Cloud Agent on the next slice to show this is not a one-at-a-time party trick. Keep it short; the credibility was earned two slides ago.',
-  'Handle the Copilot question before it is asked, and do not disparage it — 1,750 engineers use it and it earns its keep inside the file. The distinction is scope: completing a line versus owning a slice across files with tests, review and documentation. Frame it as the step up from autocomplete to a teammate you can hand a ticket to.',
-  'Bring it back to their programme in their language: economics, control, assurance. Then say the uncomfortable part out loud — the agent still needs a reviewer, and authoring the guardrails is real work. Leaders trust the pitch that names its own failure modes.',
-  'Ask for something small and specific: one awkward WCF endpoint with real callers, guardrails authored with their engineers, and a measured delta against their own baseline. No platform commitment, no estate-wide promise. Close on the line: legacy in, modern out, contract-proven identical — on their code, not our demo.',
+  'Say what this is in one sentence: a working migration, done live, not a capability pitch. One PMI endpoint comes off WCF and EF6 and lands on .NET 8, and we show the tests that prove the behaviour held. Flag now that the codebase is synthetic. We deal with that properly on slide five, and it is deliberate.',
+  'The job here is to prove we understand their position before we ask for anything. Framework 4.x with an MVC 5 front end, a WCF tail, EF6 over SQL Server, a funded move to .NET 6, Bamboo on Azure, Copilot out to 1,750 people. They have picked the destination and signed the cheque. The only thing on the table today is how long the journey takes.',
+  'This is the slide their delivery leads will already agree with, so let them agree out loud. Reading the old code is weeks. Proving parity rarely happens properly. The write-up slips every time. If anyone claims coding is the bottleneck, ask what the last migration post-mortem actually blamed.',
+  'Set the running order so nobody sits waiting for a slide that never comes. Tell them Act 2 is the part worth interrupting, and that Act 3 is for whoever in the room does not read C#.',
+  'Trust slide, so do not hurry it. Their code should never leave the building for a vendor demo, and their security team would be right to say no. We rebuilt the shape from public sources and wrote the contract down. Sourced is labelled sourced, inferred is labelled inferred, in the repo rather than just in the talk. If our domain detail is wrong, that is useful, and it takes ten minutes to correct.',
+  'What matters here is elapsed time, not cleverness. Open the worst file, ask what it promises, and get the SOAP contract, the EF6 query path and the NCD rules read back. Someone will ask whether it can be trusted. The honest answer: it is a first draft for an engineer to check, and it beats two weeks of archaeology.',
+  'Use this to reset attention before the longest stretch. Be blunt that we are not skipping gates to make the demo look quick. If their SDLC has a fifth gate we have not covered, now is the cheap moment to hear about it.',
+  'The core of the demo. Labour the order: tests written from the contract and run on the legacy endpoint first, migration second, same tests again third. If something fails live, show it. A failing test is the control working, and pretending otherwise costs more credibility than the failure does.',
+  'The point for this audience is consistency. Today a good review depends on which senior engineer picked up the PR. With the rules in the repo it does not. The dropped discount cap is the kind of thing that becomes a remediation exercise and a customer letter, so name that cost.',
+  'Security people expect a vendor to treat their gate as an obstacle, so do the opposite. The injection came with the legacy code and had been sitting there. Moving the slice is what put it in front of a human. Use whatever scanners they own. The agent proposes the fix and re-scans, and a security engineer still signs it off.',
+  'This one is for the risk and audit side of the room rather than the engineers. Impact on shared modules and remaining callers, a summary in business language, a check against the ticket, filed where the programme already keeps its records. Under a phased regulatory plan, that record is what buys permission to do the next slice.',
+  'Slow down and let the build land. Contract first, green on legacy, migrate, green on modern. This is the most defensible claim in the deck and the one to invite scrutiny on. If they remember one slide, it should be this one. Everything else is speed sitting on top of it.',
+  'Short slide. Same app, either engine, switched mid-journey, numbers unchanged. Worth saying out loud that this is also the rollback story, because that is what a CTO will actually be thinking. Then kick off a Cloud Agent on the next slice so it does not look like a one-at-a-time trick.',
+  'The Copilot question is coming, so get there first and do not run it down. 1,750 people use it and it earns its keep. The difference is scope: finishing a line versus taking a slice across files with tests, review and a record. Frame it as work you can delegate and then audit.',
+  'Land it in their language: cost, control, assurance, no new platform decision. Then say the uncomfortable part yourself. Someone still reviews the output, and writing the guardrails is real effort that needs a named owner. Executives trust a pitch that volunteers its own caveats.',
+  'Ask for something small and specific. One awkward endpoint with real callers, guardrails written with their engineers, a measured result against their own baseline. No estate-wide promise, no platform commitment. Then stop talking and let them decide.',
 ];
 
 export const meta: SlideMeta = {
-  title: 'Aviva PMI Migration — Legacy .NET to .NET 8, live in Cursor',
+  title: 'Aviva PMI Migration: legacy .NET to .NET 8, live in Cursor',
   createdAt: '2026-07-24T16:14:10.372Z',
 };
 
