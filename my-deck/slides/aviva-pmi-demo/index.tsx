@@ -7,12 +7,13 @@ import type {
 } from '@open-slide/core';
 import cursorLight from '@assets/cursor_light.svg';
 import cursorDark from '@assets/cursor_dark.svg';
+import coverHillside from './assets/cover-hillside.jpg';
 
 export const design: DesignSystem = {
   palette: { bg: '#F7F6F2', text: '#1A1A1A', accent: '#ED7D31' },
   fonts: {
-    display: 'Arial, Helvetica, "Helvetica Neue", sans-serif',
-    body: 'Arial, Helvetica, "Helvetica Neue", sans-serif',
+    display: 'Arial, Helvetica, "Helvetica Neue", system-ui, sans-serif',
+    body: 'Arial, Helvetica, "Helvetica Neue", system-ui, sans-serif',
   },
   typeScale: { hero: 120, body: 34 },
   radius: 4,
@@ -24,9 +25,10 @@ const colors = {
   muted: '#8C8B84',
   tile: '#FFFFFF',
   tileBorder: '#E4E1D8',
-  darkInk: '#EFEDE8',
-  darkMuted: '#A2A5AB',
-  darkRule: 'rgba(239,237,232,0.32)',
+  darkInk: '#FFFFFF',
+  darkMuted: '#CFD2D7',
+  darkRule: 'rgba(255,255,255,0.38)',
+  hairline: '#E1DED4',
 } as const;
 
 const root = {
@@ -117,12 +119,41 @@ const cardLabel = {
   fontFamily: 'var(--osd-font-display)',
 } as const;
 
-const WhyCard = ({ label, detail }: { label: string; detail: string }) => (
-  <div style={{ ...tile, padding: '30px 26px 32px', display: 'flex', flexDirection: 'column' }}>
-    <span style={{ fontSize: 27, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+const WhyCard = ({
+  numeral,
+  label,
+  detail,
+}: {
+  numeral: string;
+  label: string;
+  detail: string;
+}) => (
+  <div style={{ ...tile, padding: '28px 26px 34px', display: 'flex', flexDirection: 'column' }}>
+    <span
+      style={{
+        fontSize: 26,
+        fontWeight: 700,
+        lineHeight: 1.2,
+        letterSpacing: '0.02em',
+        color: 'var(--osd-accent)',
+        fontFamily: 'var(--osd-font-display)',
+      }}
+    >
+      {numeral}
+    </span>
+    <span
+      style={{
+        marginTop: 22,
+        fontSize: 26,
+        fontWeight: 700,
+        lineHeight: 1.2,
+        letterSpacing: '-0.015em',
+        whiteSpace: 'nowrap',
+      }}
+    >
       {label}
     </span>
-    <span style={{ marginTop: 16, fontSize: 22, lineHeight: 1.45, color: colors.body }}>
+    <span style={{ marginTop: 14, fontSize: 22, lineHeight: 1.45, color: colors.body }}>
       {detail}
     </span>
   </div>
@@ -137,71 +168,52 @@ const StackCard = ({ label, detail }: { label: string; detail: string }) => (
   </div>
 );
 
-const NumberRow = ({
-  numeral,
-  heading,
-  detail,
-}: {
-  numeral: string;
-  heading: string;
-  detail: string;
-}) => (
-  <div
-    style={{
-      ...tile,
-      padding: '24px 34px 26px',
-      display: 'flex',
-      alignItems: 'baseline',
-      gap: 34,
-    }}
-  >
+// Hairline rows, no fill: the divider is a one-sided border on the row itself,
+// so PPTX keeps the text native and the rule exports as a strip on that frame.
+const hairlineRow = {
+  boxSizing: 'border-box',
+  borderTop: `2px solid ${colors.hairline}`,
+  display: 'flex',
+  alignItems: 'baseline',
+} as const;
+
+const AgendaRow = ({ numeral, heading }: { numeral: string; heading: string }) => (
+  <div style={{ ...hairlineRow, padding: '30px 0 34px', gap: 44 }}>
     <span
       style={{
-        fontSize: 50,
+        fontSize: 64,
         fontWeight: 700,
-        lineHeight: 1.1,
+        lineHeight: 1,
         letterSpacing: '-0.02em',
         color: 'var(--osd-accent)',
         fontFamily: 'var(--osd-font-display)',
-        minWidth: 84,
+        minWidth: 132,
       }}
     >
       {numeral}
     </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: 34, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.01em' }}>
-        {heading}
-      </span>
-      <span style={{ marginTop: 10, fontSize: 26, lineHeight: 1.4, color: colors.body }}>
-        {detail}
-      </span>
+    <span style={{ fontSize: 42, fontWeight: 700, lineHeight: 1.2, letterSpacing: '-0.015em' }}>
+      {heading}
     </span>
   </div>
 );
 
 const StepRow = ({ numeral, detail }: { numeral: string; detail: string }) => (
-  <div
-    style={{
-      ...tile,
-      padding: '22px 32px 24px',
-      display: 'flex',
-      alignItems: 'baseline',
-      gap: 30,
-    }}
-  >
+  <div style={{ ...hairlineRow, padding: '26px 0 28px', gap: 40 }}>
     <span
       style={{
-        fontSize: 38,
+        fontSize: 42,
         fontWeight: 700,
-        lineHeight: 1.2,
+        lineHeight: 1.1,
+        letterSpacing: '-0.02em',
         color: 'var(--osd-accent)',
         fontFamily: 'var(--osd-font-display)',
-        minWidth: 68,
+        minWidth: 100,
       }}
     >
       {numeral}
     </span>
-    <span style={{ fontSize: 30, lineHeight: 1.4, color: colors.body }}>{detail}</span>
+    <span style={{ fontSize: 32, lineHeight: 1.4, color: colors.body }}>{detail}</span>
   </div>
 );
 
@@ -226,14 +238,19 @@ const ChipCaption = ({ children }: { children: ReactNode }) => (
 );
 
 const Cover: Page = () => (
-  <div style={{ ...root, background: '#101318', color: colors.darkInk }}>
-    {/* Decorative dawn-hillside wash. Gradients raster on export; text stays native. */}
+  <div style={{ ...root, background: '#0B0D11', color: colors.darkInk }}>
+    <img
+      src={coverHillside}
+      alt="Dawn over a hillside ridge"
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+    />
+    {/* Scrim so the white lockup and title stay legible over the photograph. */}
     <div
       style={{
         position: 'absolute',
         inset: 0,
         background:
-          'radial-gradient(1400px 700px at 16% 92%, rgba(237,125,49,0.34) 0%, rgba(237,125,49,0) 68%), radial-gradient(900px 520px at 82% 8%, rgba(126,150,180,0.20) 0%, rgba(126,150,180,0) 70%), linear-gradient(176deg, #171B22 0%, #1E232B 46%, #0B0D11 100%)',
+          'linear-gradient(102deg, rgba(8,10,14,0.74) 0%, rgba(8,10,14,0.52) 38%, rgba(8,10,14,0.16) 72%, rgba(8,10,14,0.05) 100%), linear-gradient(180deg, rgba(8,10,14,0.46) 0%, rgba(8,10,14,0) 34%)',
       }}
     />
     <div
@@ -314,24 +331,29 @@ const WhyCursor: Page = () => (
       }}
     >
       <WhyCard
+        numeral="01"
         label="Model neutral"
-        detail="Every frontier lab in one place. Pick per task, switch when something better lands."
+        detail="Every frontier lab in one place, picked per task."
       />
       <WhyCard
+        numeral="02"
         label="Cursor harness"
-        detail="Retrieval, edits, terminal and tests in one loop, built for large old repos."
+        detail="Retrieval, edits, terminal and tests in one loop."
       />
       <WhyCard
+        numeral="03"
         label="Composer models"
-        detail="Our own fast models for the repetitive work, like bulk refactors and test scaffolding."
+        detail="Our own fast models for the repetitive work."
       />
       <WhyCard
+        numeral="04"
         label="Multi-agentic UX"
-        detail="Several agents at once. You keep the diffs that survive review."
+        detail="Several agents at once, and you keep what survives review."
       />
       <WhyCard
+        numeral="05"
         label="Software factory"
-        detail="Rules and Skills live in the repo, so every team inherits the same standard."
+        detail="Rules and Skills live in the repo, so teams inherit them."
       />
     </div>
   </div>
@@ -378,27 +400,11 @@ const Agenda: Page = () => (
     <Eyebrow>Agenda</Eyebrow>
     <Title>What we'll show today.</Title>
     <Lede>Four demos, all live against the real repo. Questions as we go.</Lede>
-    <div style={{ marginTop: 'auto', paddingTop: 48, display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <NumberRow
-        numeral="01"
-        heading="Legacy comprehension"
-        detail="Cursor reads the WCF service and the EF6 model, then explains how NCD is worked out."
-      />
-      <NumberRow
-        numeral="02"
-        heading="Live migration, Jira to PR"
-        detail="Ticket AAD-1, from the board to a pull request, in this room."
-      />
-      <NumberRow
-        numeral="03"
-        heading="Agentic code review"
-        detail="Local Skills review the diff against rules that are written down in the repo."
-      />
-      <NumberRow
-        numeral="04"
-        heading="Security and impact"
-        detail="Scanners on the changed code, then an impact assessment posted to Confluence."
-      />
+    <div style={{ marginTop: 'auto', paddingTop: 56, display: 'flex', flexDirection: 'column' }}>
+      <AgendaRow numeral="01" heading="Legacy comprehension" />
+      <AgendaRow numeral="02" heading="Live migration, Jira to PR" />
+      <AgendaRow numeral="03" heading="Agentic code review" />
+      <AgendaRow numeral="04" heading="Security and impact" />
     </div>
   </div>
 );
@@ -515,7 +521,7 @@ const Close: Page = () => (
     <Eyebrow>Where this goes</Eyebrow>
     <Title>One endpoint moved, with proof it still behaves.</Title>
     <Lede>The rest of the migration is that same loop, repeated. What we would like to agree today:</Lede>
-    <div style={{ marginTop: 'auto', paddingTop: 48, display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ marginTop: 'auto', paddingTop: 56, display: 'flex', flexDirection: 'column' }}>
       <StepRow
         numeral="01"
         detail="Pick the next two endpoints on the same WCF service and run them this way."
