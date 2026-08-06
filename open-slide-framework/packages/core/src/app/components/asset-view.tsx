@@ -268,11 +268,11 @@ export function AssetView({ slideId }: Props) {
           className="pointer-events-none absolute inset-0 z-30 animate-in fade-in-0 duration-200"
           aria-hidden="true"
         >
-          <div className="absolute inset-0 bg-brand/5" />
-          <div className="absolute inset-2 rounded-[10px] border border-dashed border-brand/40" />
+          <div className="absolute inset-0 bg-accent-blue/5" />
+          <div className="absolute inset-2 rounded-[10px] border border-dashed border-accent-blue/40" />
           <div className="absolute inset-x-0 bottom-8 flex justify-center">
             <div className="flex animate-in items-center gap-2 rounded-[6px] border border-border bg-card px-3 py-1.5 text-[12px] font-medium shadow-floating fade-in-0 slide-in-from-bottom-1 duration-300">
-              <ArrowDownToLine className="size-3.5 text-brand" />
+              <ArrowDownToLine className="size-3.5 text-accent-blue" />
               <span>{t.asset.dropToUpload}</span>
             </div>
           </div>
@@ -672,7 +672,7 @@ function PreviewDialog({
         )}
         <div className="rounded-[5px] border border-hairline bg-muted/50 px-3 py-2 font-mono text-[11.5px] leading-relaxed">
           <span className="text-muted-foreground">{t.asset.importHintComment}</span>
-          <span className="text-brand">'{importPath}'</span>
+          <span className="text-accent-blue">'{importPath}'</span>
           <span className="text-muted-foreground">{t.asset.importHintSemi}</span>
         </div>
       </DialogContent>

@@ -158,7 +158,7 @@ export function HomeShell() {
         />
       </div>
 
-      <div className="paper relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-canvas">
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-y-auto bg-canvas">
         <div className="flex items-center justify-between border-b border-hairline bg-sidebar px-4 py-3 md:hidden">
           <h1 className="font-heading text-lg font-bold tracking-tight">{t.home.appTitle}</h1>
         </div>

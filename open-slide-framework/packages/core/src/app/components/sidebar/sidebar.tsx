@@ -123,7 +123,7 @@ export function Sidebar({
   }, [creating]);
 
   return (
-    <aside className="paper relative flex h-full w-[16.5rem] shrink-0 flex-col border-r border-hairline bg-sidebar text-sidebar-foreground">
+    <aside className="relative flex h-full w-[16.5rem] shrink-0 flex-col border-r border-hairline bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 pt-5 pb-4">
         <h1 className="font-heading text-lg font-bold tracking-tight">{t.home.appTitle}</h1>
         <div className="-mr-1.5 flex items-center">
@@ -173,9 +173,9 @@ export function Sidebar({
               className={cn(
                 'relative',
                 before &&
-                  'before:absolute before:inset-x-2 before:-top-px before:h-[2px] before:rounded-full before:bg-brand',
+                  'before:absolute before:inset-x-2 before:-top-px before:h-[2px] before:rounded-full before:bg-accent-blue',
                 after &&
-                  'after:absolute after:inset-x-2 after:-bottom-px after:h-[2px] after:rounded-full after:bg-brand',
+                  'after:absolute after:inset-x-2 after:-bottom-px after:h-[2px] after:rounded-full after:bg-accent-blue',
                 dragId === folder.id && 'opacity-50',
               )}
               draggable={import.meta.env.DEV}

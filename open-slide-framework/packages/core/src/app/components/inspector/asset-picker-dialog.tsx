@@ -170,11 +170,11 @@ export function AssetPickerDialog({
               className="pointer-events-none absolute inset-0 z-10 animate-in fade-in-0 duration-200"
               aria-hidden
             >
-              <div className="absolute inset-0 bg-brand/5" />
-              <div className="absolute inset-1 rounded-[8px] border border-dashed border-brand/40" />
+              <div className="absolute inset-0 bg-accent-blue/5" />
+              <div className="absolute inset-1 rounded-[8px] border border-dashed border-accent-blue/40" />
               <div className="absolute inset-x-0 bottom-4 flex justify-center">
                 <div className="flex items-center gap-2 rounded-[6px] border border-border bg-card px-3 py-1.5 text-[12px] font-medium shadow-floating">
-                  <ArrowDownToLine className="size-3.5 text-brand" />
+                  <ArrowDownToLine className="size-3.5 text-accent-blue" />
                   <span>{t.asset.dropToUpload}</span>
                 </div>
               </div>

@@ -214,7 +214,7 @@ export function ThumbnailRail({
                     className={cn(
                       'flex size-5 items-center justify-center rounded-[3px] text-muted-foreground/70 outline-none',
                       'motion-safe:transition-colors hover:bg-muted hover:text-foreground',
-                      'focus-visible:ring-1 focus-visible:ring-brand',
+                      'focus-visible:ring-1 focus-visible:ring-accent-blue',
                     )}
                   >
                     <Grid2x2 className="size-3.5" strokeWidth={1.75} />
@@ -368,7 +368,7 @@ function HorizontalVirtualThumbList({
         <span
           className={cn(
             'font-mono text-[9.5px] font-medium tracking-[0.06em] tabular-nums uppercase',
-            active ? 'text-brand' : 'text-muted-foreground/70',
+            active ? 'text-accent-blue' : 'text-muted-foreground/70',
           )}
         >
           {(i + 1).toString().padStart(2, '0')}
@@ -377,7 +377,7 @@ function HorizontalVirtualThumbList({
           className={cn(
             'relative shrink-0 overflow-hidden rounded-[4px] border bg-card motion-safe:transition-[border-color,box-shadow]',
             active
-              ? 'border-brand shadow-[0_0_0_1px_var(--brand)]'
+              ? 'border-accent-blue shadow-[0_0_0_1px_var(--accent-blue)]'
               : 'border-hairline group-hover/thumb:border-foreground/25',
           )}
           style={{ width: thumbWidth, height: HORIZONTAL_THUMB_HEIGHT }}
@@ -598,7 +598,7 @@ function ThumbContents({
         <span
           className={cn(
             'font-mono text-[10px] font-medium tracking-[0.06em] tabular-nums uppercase',
-            active ? 'text-brand' : 'text-muted-foreground/70',
+            active ? 'text-accent-blue' : 'text-muted-foreground/70',
           )}
         >
           {(index + 1).toString().padStart(2, '0')}
@@ -619,7 +619,7 @@ function ThumbContents({
         className={cn(
           'relative shrink-0 overflow-hidden rounded-[4px] border bg-card motion-safe:transition-[border-color,box-shadow]',
           active
-            ? 'border-brand shadow-[0_0_0_1px_var(--brand)]'
+            ? 'border-accent-blue shadow-[0_0_0_1px_var(--accent-blue)]'
             : 'border-hairline group-hover/thumb:border-foreground/25',
         )}
         style={{ width: thumbWidth, height }}
@@ -632,7 +632,7 @@ function ThumbContents({
         {active && (
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-brand"
+            className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-accent-blue"
           />
         )}
       </div>
@@ -794,7 +794,7 @@ function SortableThumb({
       }}
       className={cn(
         thumbButtonClass(active),
-        isDragging && 'z-10 cursor-grabbing opacity-60 shadow-edge ring-1 ring-brand',
+        isDragging && 'z-10 cursor-grabbing opacity-60 shadow-edge ring-1 ring-accent-blue',
       )}
       {...attributes}
       {...listeners}
