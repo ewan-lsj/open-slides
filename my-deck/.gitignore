@@ -1,3 +1,11 @@
 node_modules
 dist
 .DS_Store
+
+# Local decks and synced agent skill copies
+slides/*/
+!slides/.folders.json
+themes/*
+!themes/.gitkeep
+.agents/
+.claude/

@@ -112,6 +112,7 @@ export const en: Locale = {
     exportAsHtml: 'Export as HTML',
     exportAsPdf: 'Export as PDF',
     exportAsPptx: 'Export as PPTX',
+    exportAsExactPptx: 'Export as PPTX (as images)',
     pdfExportFailed: 'PDF export failed',
     pptxExportFailed: 'PPTX export failed',
     pdfExportSafariUnsupported:
@@ -360,6 +361,18 @@ export const en: Locale = {
     title: 'Exporting PPTX',
     processing: 'Rendering page {current} of {total}',
     generating: 'Building presentation…',
+    done: 'Done',
+    fallbacks: '{count} complex regions kept as images',
+  },
+
+  googleSlidesToast: {
+    title: 'Exporting to Google Slides',
+    authorizing: 'Authorizing…',
+    capturing: 'Capturing page {current} of {total}',
+    uploading: 'Uploading image {current} of {total}',
+    creating: 'Building presentation…',
+    notes: 'Adding speaker notes…',
+    cleanup: 'Cleaning up…',
     done: 'Done',
     fallbacks: '{count} complex regions kept as images',
   },

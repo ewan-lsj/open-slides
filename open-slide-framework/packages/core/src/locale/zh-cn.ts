@@ -111,6 +111,7 @@ export const zhCN: Locale = {
     exportAsHtml: '导出为 HTML',
     exportAsPdf: '导出为 PDF',
     exportAsPptx: '导出 PPTX',
+    exportAsExactPptx: '导出 PPTX（图片）',
     pdfExportFailed: 'PDF 导出失败',
     pptxExportFailed: 'PPTX 导出失败',
     pdfExportSafariUnsupported:
@@ -359,6 +360,18 @@ export const zhCN: Locale = {
     title: '导出 PPTX',
     processing: '正在渲染第 {current} / {total} 页',
     generating: '正在组合演示文稿…',
+    done: '完成',
+    fallbacks: '{count} 个复杂区域保留为图片',
+  },
+
+  googleSlidesToast: {
+    title: '导出到 Google 幻灯片',
+    authorizing: '正在授权…',
+    capturing: '正在捕获第 {current} / {total} 页',
+    uploading: '正在上传图片 {current} / {total}',
+    creating: '正在组合演示文稿…',
+    notes: '正在添加演讲者备注…',
+    cleanup: '正在清理…',
     done: '完成',
     fallbacks: '{count} 个复杂区域保留为图片',
   },

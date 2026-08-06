@@ -111,6 +111,7 @@ export const zhTW: Locale = {
     exportAsHtml: '匯出為 HTML',
     exportAsPdf: '匯出為 PDF',
     exportAsPptx: '匯出 PPTX',
+    exportAsExactPptx: '匯出 PPTX（圖片）',
     pdfExportFailed: 'PDF 匯出失敗',
     pptxExportFailed: 'PPTX 匯出失敗',
     pdfExportSafariUnsupported:
@@ -359,6 +360,18 @@ export const zhTW: Locale = {
     title: '匯出 PPTX',
     processing: '正在算繪第 {current} / {total} 頁',
     generating: '正在組合簡報…',
+    done: '完成',
+    fallbacks: '{count} 個複雜區域保留為圖片',
+  },
+
+  googleSlidesToast: {
+    title: '匯出到 Google 簡報',
+    authorizing: '正在授權…',
+    capturing: '正在擷取第 {current} / {total} 頁',
+    uploading: '正在上傳圖片 {current} / {total}',
+    creating: '正在組合簡報…',
+    notes: '正在加入講者備註…',
+    cleanup: '正在清理…',
     done: '完成',
     fallbacks: '{count} 個複雜區域保留為圖片',
   },

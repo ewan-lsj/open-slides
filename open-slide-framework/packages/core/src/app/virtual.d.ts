@@ -14,6 +14,9 @@ declare module 'virtual:open-slide/config' {
     slidesDir?: string;
     port?: number;
     locale?: Locale;
+    googleSlides?: {
+      clientId: string;
+    };
     version: string;
     build: {
       showSlideBrowser: boolean;

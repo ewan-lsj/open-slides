@@ -1,3 +1,12 @@
 .DS_Store
 node_modules/
 dist/
+
+# Local / client decks — do not commit presentation content
+my-deck/slides/*/
+!my-deck/slides/.folders.json
+my-deck/themes/*
+!my-deck/themes/.gitkeep
+open-slide-framework/apps/demo/slides/basf-workshop-prebrief/
+open-slide-framework/apps/demo/slides/richemont-september-meeting/
+open-slide-framework/apps/demo/slides/enterprise-control-plane/

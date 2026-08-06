@@ -26,6 +26,11 @@ type OpenSlideBuildConfig = {
   allowHtmlDownload?: boolean;
 };
 
+type OpenSlideGoogleSlidesConfig = {
+  /** OAuth 2.0 client ID from Google Cloud Console (Web application). */
+  clientId: string;
+};
+
 type OpenSlideConfig = {
   /** Base public path for subpath hosting (leading + trailing slash). Default: '/'. */
   base?: string;
@@ -39,10 +44,27 @@ type OpenSlideConfig = {
   port?: number;
   /** UI language for the runtime (home, inspector, presenter, etc.). */
   locale?: Locale;
+  /** Browser OAuth client for direct Google Slides export. */
+  googleSlides?: OpenSlideGoogleSlidesConfig;
   /** Build-time UI toggles. */
   build?: OpenSlideBuildConfig;
 };
 ```
+
+### Google Slides export
+
+```ts
+const config: OpenSlideConfig = {
+  googleSlides: {
+    clientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+  },
+};
+```
+
+Create a **Web application** OAuth client in Google Cloud Console and add your
+dev/preview origin to **Authorized JavaScript origins** (for example
+`http://localhost:5173`). The export uses browser OAuth with the `drive.file`
+scope and creates native Google Slides decks directly from the toolbar.
 
 ## Common recipes
 

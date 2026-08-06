@@ -29,6 +29,9 @@ export type PptxExportProgress = {
   total: number;
   /** Number of regions rasterized by the editable PPTX exporter. */
   fallbackCount?: number;
+  /** Per-slide fidelity summaries when available. */
+  reports?: import('./export-native-scene').SceneFidelityReport[];
+  report?: import('./export-native-scene').SceneFidelityReport;
   /** 0–95 while capturing, 98 while assembling, 100 when done. */
   percent: number;
 };

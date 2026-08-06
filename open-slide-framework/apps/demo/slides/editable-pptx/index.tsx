@@ -74,7 +74,7 @@ const EditableExport: Page = () => (
 );
 
 export const notes = [
-  'Upload the exported editable PPTX to Google Drive, then open it with Google Slides.',
+  'Use Export to Google Slides in the toolbar to create a native deck in your Google account.',
 ];
 
 export const meta: SlideMeta = {
