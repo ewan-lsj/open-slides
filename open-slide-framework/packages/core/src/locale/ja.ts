@@ -113,6 +113,7 @@ export const ja: Locale = {
     exportAsHtml: 'HTML として書き出し',
     exportAsPdf: 'PDF として書き出し',
     exportAsPptx: 'PPTX として書き出し',
+    exportAsExactPptx: 'PPTX として書き出し（画像）',
     pdfExportFailed: 'PDF の書き出しに失敗しました',
     pptxExportFailed: 'PPTX の書き出しに失敗しました',
     pdfExportSafariUnsupported:
@@ -365,6 +366,18 @@ export const ja: Locale = {
     title: 'PPTX を書き出し中',
     processing: 'ページ {current} / {total} を描画中',
     generating: 'プレゼンテーションを構築中…',
+    done: '完了',
+    fallbacks: '{count} 個の複雑な領域を画像として保持',
+  },
+
+  googleSlidesToast: {
+    title: 'Google スライドへ書き出し中',
+    authorizing: '認証中…',
+    capturing: 'ページ {current} / {total} をキャプチャ中',
+    uploading: '画像 {current} / {total} をアップロード中',
+    creating: 'プレゼンテーションを構築中…',
+    notes: 'スピーカーノートを追加中…',
+    cleanup: 'クリーンアップ中…',
     done: '完了',
     fallbacks: '{count} 個の複雑な領域を画像として保持',
   },

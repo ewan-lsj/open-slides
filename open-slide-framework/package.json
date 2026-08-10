@@ -27,6 +27,11 @@
     "@biomejs/biome": "2.4.12",
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.31.0",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
+    "pixelmatch": "^7.2.0",
+    "playwright": "^1.62.1",
+    "pngjs": "^7.0.0",
     "turbo": "^2.9.18",
     "vitest": "^2.1.9"
   }

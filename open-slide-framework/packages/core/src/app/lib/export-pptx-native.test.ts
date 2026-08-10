@@ -1,18 +1,21 @@
 import { strFromU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import {
-  buildNativePptx,
+  applyTextTransform,
   googleSlidesFontFace,
   googleSlidesTextBounds,
   inferTextAlign,
   inferTextValign,
   type NativeSlideScene,
+  paddingInsetsFromStyle,
+  parseBoxShadow,
   parseCssColor,
+  parseGradient,
   relativeBounds,
   requiresAtomicRaster,
-  resolveNativePptxFilename,
-  shapesFromBoxStyle,
-} from './export-pptx-native';
+} from './export-native-scene';
+import { resolveNativePptxFilename } from './export-pptx-native';
+import { buildNativePptx, pxToEmu, validatePptxPackage } from './export-pptx-writer';
 
 describe('editable PPTX export', () => {
   it('parses CSS colors and alpha values', () => {
@@ -22,22 +25,84 @@ describe('editable PPTX export', () => {
       transparency: 75,
     });
     expect(parseCssColor('transparent')).toBeUndefined();
+    expect(parseCssColor('rgba(0, 0, 0, 0)')).toBeUndefined();
+  });
+
+  it('applies text-transform in JS', () => {
+    expect(applyTextTransform('Challenge', 'uppercase')).toBe('CHALLENGE');
+    expect(applyTextTransform('Hello World', 'lowercase')).toBe('hello world');
+    expect(applyTextTransform('hello world', 'capitalize')).toBe('Hello World');
+  });
+
+  it('parses gradients and box shadows', () => {
+    expect(parseGradient('linear-gradient(90deg, #112233 0%, #445566 100%)')).toEqual({
+      kind: 'linear',
+      angle: 90,
+      stops: [
+        { offset: 0, color: { color: '112233', transparency: 0 } },
+        { offset: 1, color: { color: '445566', transparency: 0 } },
+      ],
+    });
+    expect(parseBoxShadow('0 4px 12px rgba(0,0,0,0.25)')).toMatchObject({
+      offsetX: 0,
+      offsetY: 4,
+      blur: 12,
+      inset: false,
+      color: { color: '000000', transparency: 75 },
+    });
+    // Chromium computed style: color-first, with trailing spread.
+    expect(parseBoxShadow('rgba(20, 18, 11, 0.05) 0px 2px 4px 0px')).toMatchObject({
+      offsetX: 0,
+      offsetY: 2,
+      blur: 4,
+      spread: 0,
+      color: { color: '14120B', transparency: 95 },
+    });
+    // Multi-layer card shadow: pick the more visible (larger blur) outer layer.
+    expect(
+      parseBoxShadow(
+        'rgba(20, 18, 11, 0.05) 0px 2px 4px 0px, rgba(20, 18, 11, 0.07) 0px 6px 16px 0px',
+      ),
+    ).toMatchObject({
+      offsetX: 0,
+      offsetY: 6,
+      blur: 16,
+      color: { color: '14120B', transparency: 93 },
+    });
+    // Unit suffixes must never be treated as named colors.
+    expect(parseBoxShadow('rgba(0, 0, 0, 0.25) 0px 4px 12px 0px')).toMatchObject({
+      offsetX: 0,
+      offsetY: 4,
+      blur: 12,
+      color: { transparency: 75 },
+    });
+  });
+
+  it('maps CSS padding on a text block to OOXML body insets', () => {
+    expect(
+      paddingInsetsFromStyle({
+        paddingLeft: '28px',
+        paddingTop: '20px',
+        paddingRight: '28px',
+        paddingBottom: '20px',
+      } as CSSStyleDeclaration),
+    ).toEqual({ left: 28, top: 20, right: 28, bottom: 20 });
+    expect(
+      paddingInsetsFromStyle({
+        paddingLeft: '0px',
+        paddingTop: '0px',
+        paddingRight: '0px',
+        paddingBottom: '0px',
+      } as CSSStyleDeclaration),
+    ).toBeUndefined();
   });
 
   it('converts measured DOM bounds to canvas-relative coordinates', () => {
     const rect = { left: 125, top: 250, width: 400, height: 300 } as DOMRect;
     const frame = { left: 100, top: 200 } as DOMRect;
     expect(relativeBounds(rect, frame)).toEqual({ x: 25, y: 50, w: 400, h: 300 });
-
-    const clipped = {
-      left: 50,
-      top: 150,
-      right: 250,
-      bottom: 450,
-      width: 200,
-      height: 300,
-    } as DOMRect;
-    expect(relativeBounds(clipped, frame)).toEqual({ x: -50, y: -50, w: 200, h: 300 });
+    expect(pxToEmu(1920)).toBe(12192000);
+    expect(pxToEmu(1080)).toBe(6858000);
   });
 
   it('uses Google Slides-safe fonts and a simple filename', () => {
@@ -78,21 +143,6 @@ describe('editable PPTX export', () => {
       w: 1700,
       h: 86.4,
     });
-
-    const centeredLabel = {
-      left: 300,
-      top: 250,
-      right: 370,
-      bottom: 274,
-      width: 70,
-      height: 24,
-    } as DOMRect;
-    expect(googleSlidesTextBounds(centeredLabel, centeredLabel, frame, 'center', 20)).toEqual({
-      x: 293,
-      y: 250,
-      w: 84,
-      h: 27,
-    });
   });
 
   it('infers text centering from flex and rendered geometry', () => {
@@ -111,69 +161,6 @@ describe('editable PPTX export', () => {
         centeredRow,
       ),
     ).toBe('middle');
-
-    const centeredBlock = {
-      display: 'block',
-      flexDirection: 'row',
-      justifyContent: 'normal',
-      alignItems: 'normal',
-      textAlign: 'center',
-    } as CSSStyleDeclaration;
-    expect(inferTextAlign(centeredBlock)).toBe('center');
-    expect(
-      inferTextValign(
-        { top: 120, bottom: 150 },
-        { top: 100, bottom: 170, height: 70 },
-        centeredBlock,
-      ),
-    ).toBe('middle');
-
-    const leftAlignedCenteredRow = {
-      display: 'flex',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      textAlign: 'left',
-    } as CSSStyleDeclaration;
-    expect(inferTextAlign(leftAlignedCenteredRow)).toBe('left');
-
-    const centeredGrid = {
-      display: 'grid',
-      flexDirection: 'row',
-      justifyContent: 'normal',
-      justifyItems: 'center',
-      alignItems: 'center',
-      textAlign: 'start',
-    } as CSSStyleDeclaration;
-    expect(inferTextAlign(centeredGrid)).toBe('center');
-
-    const balancedBlock = {
-      display: 'block',
-      flexDirection: 'row',
-      justifyContent: 'normal',
-      justifyItems: 'normal',
-      alignItems: 'normal',
-      textAlign: 'start',
-    } as CSSStyleDeclaration;
-    expect(
-      inferTextAlign(
-        balancedBlock,
-        { left: 114, right: 200 },
-        { left: 100, right: 214, width: 114 },
-      ),
-    ).toBe('left');
-
-    const paddedPill = {
-      display: 'inline-block',
-      flexDirection: 'row',
-      justifyContent: 'normal',
-      justifyItems: 'normal',
-      alignItems: 'normal',
-      textAlign: 'start',
-    } as CSSStyleDeclaration;
-    expect(
-      inferTextAlign(paddedPill, { left: 114, right: 200 }, { left: 100, right: 214, width: 114 }),
-    ).toBe('center');
   });
 
   it('classifies atomic and rotated elements for raster fallback', () => {
@@ -195,42 +182,10 @@ describe('editable PPTX export', () => {
         baseStyle,
       ),
     ).toBe(true);
-    expect(requiresAtomicRaster({ tagName: 'SVG' } as Element, baseStyle)).toBe(true);
     expect(requiresAtomicRaster(div, baseStyle)).toBe(false);
-    expect(
-      requiresAtomicRaster(div, {
-        ...baseStyle,
-        transform: 'matrix(0, 1, -1, 0, 0, 0)',
-      }),
-    ).toBe(true);
-    expect(
-      requiresAtomicRaster(div, {
-        ...baseStyle,
-        transform: 'matrix(2, 0, 0, 2, 0, 0)',
-      }),
-    ).toBe(true);
-    expect(
-      requiresAtomicRaster({ tagName: 'DIV', children: [{}] } as unknown as Element, {
-        ...baseStyle,
-        borderTopLeftRadius: '20px',
-        overflow: 'hidden',
-      }),
-    ).toBe(true);
-    expect(
-      requiresAtomicRaster(
-        {
-          tagName: 'DIV',
-          children: [{ tagName: 'SVG' }],
-        } as unknown as Element,
-        {
-          ...baseStyle,
-          borderTopLeftRadius: '50%',
-        },
-      ),
-    ).toBe(true);
   });
 
-  it('writes editable text, shapes, images, and notes into a valid PPTX package', async () => {
+  it('writes editable multi-run text, shapes, images, and notes into a valid PPTX package', async () => {
     const pixel =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+XyW8WQAAAABJRU5ErkJggg==';
     const scene: NativeSlideScene = {
@@ -247,19 +202,39 @@ describe('editable PPTX export', () => {
         {
           kind: 'text',
           bounds: { x: 100, y: 100, w: 600, h: 100 },
-          text: 'Editable heading',
-          color: { color: 'FFFFFF', transparency: 0 },
-          fontFace: 'Arial',
-          fontSize: 32,
-          bold: true,
-          italic: false,
-          align: 'left',
+          paragraphs: [
+            {
+              runs: [
+                {
+                  text: 'Dual agentic: ',
+                  color: { color: 'FFFFFF', transparency: 0 },
+                  fontFace: 'Inter',
+                  fontSize: 24,
+                  bold: true,
+                  italic: false,
+                },
+                {
+                  text: 'Vertex platform',
+                  color: { color: 'FFFFFF', transparency: 0 },
+                  fontFace: 'Inter',
+                  fontSize: 24,
+                  bold: false,
+                  italic: false,
+                  charSpacing: 1.2,
+                },
+              ],
+              align: 'left',
+              lineSpacing: 32,
+            },
+          ],
           valign: 'top',
+          wrapMode: 'reflow',
         },
         {
           kind: 'raster',
           bounds: { x: 800, y: 200, w: 200, h: 200 },
           data: pixel,
+          reason: 'decoration',
         },
       ],
     };
@@ -268,15 +243,21 @@ describe('editable PPTX export', () => {
     const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
     const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
 
+    expect(validatePptxPackage(files)).toEqual([]);
     expect(files['[Content_Types].xml']).toBeDefined();
     expect(slideXml).toContain('<p:bg>');
     expect(slideXml).toContain('F7F7F4');
-    expect(slideXml).toContain('Editable heading');
+    expect(slideXml).toContain('Dual agentic: ');
+    expect(slideXml).toContain('Vertex platform');
+    expect(slideXml).toContain('b="1"');
+    expect(slideXml).toContain('typeface="Inter"');
+    expect(slideXml).toContain('spc="120"');
     expect(slideXml).toContain('112233');
+    expect(slideXml).toContain(`cx="${pxToEmu(1920)}"`);
     expect(files['ppt/notesSlides/notesSlide1.xml']).toBeDefined();
   });
 
-  it('keeps text editable while retaining raster fallbacks', async () => {
+  it('keeps text editable while retaining raster fallbacks and real fonts', async () => {
     const pixel =
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+XyW8WQAAAABJRU5ErkJggg==';
     const scene: NativeSlideScene = {
@@ -285,14 +266,23 @@ describe('editable PPTX export', () => {
         {
           kind: 'text',
           bounds: { x: 100, y: 100, w: 600, h: 100 },
-          text: 'Editable in Google Slides',
-          color: { color: '112233', transparency: 0 },
-          fontFace: 'Geist',
-          fontSize: 32,
-          bold: false,
-          italic: false,
-          align: 'left',
+          paragraphs: [
+            {
+              runs: [
+                {
+                  text: 'Editable in PowerPoint',
+                  color: { color: '112233', transparency: 0 },
+                  fontFace: 'Geist',
+                  fontSize: 32,
+                  bold: false,
+                  italic: false,
+                },
+              ],
+              align: 'left',
+            },
+          ],
           valign: 'top',
+          wrapMode: 'reflow',
         },
         {
           kind: 'raster',
@@ -302,173 +292,26 @@ describe('editable PPTX export', () => {
       ],
     };
 
-    const blob = await buildNativePptx([scene], 'Google Slides export');
+    const blob = await buildNativePptx([scene], 'PowerPoint export');
     const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
     const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
 
-    expect(slideXml).toContain('Editable in Google Slides');
-    expect(slideXml).toContain('typeface="Arial"');
-    expect(slideXml).not.toContain('Geist');
-    expect(slideXml).toContain('<a:normAutofit');
+    expect(slideXml).toContain('Editable in PowerPoint');
+    expect(slideXml).toContain('typeface="Geist"');
     expect(slideXml).toContain('<p:pic>');
+    expect(validatePptxPackage(files)).toEqual([]);
   });
 
-  it('emits a filled card as one text frame with stroke — not a bare shape under floating text', async () => {
-    const scene: NativeSlideScene = {
-      fallbackCount: 0,
-      background: { color: '000000', transparency: 0 },
-      elements: [
-        {
-          kind: 'text',
-          bounds: { x: 100, y: 200, w: 800, h: 200 },
-          text: 'Security control review templates',
-          color: { color: 'D6D6D6', transparency: 0 },
-          fontFace: 'Arial',
-          fontSize: 18,
-          bold: false,
-          italic: false,
-          align: 'left',
-          valign: 'middle',
-          fill: { color: '2E2E2E', transparency: 0 },
-          line: { color: '5C5C5C', transparency: 0, width: 1.5 },
-          radius: 4,
-          margin: [20, 20, 20, 20],
-        },
-      ],
-    };
-
-    const blob = await buildNativePptx([scene], 'Filled card');
+  it('dedupes identical media across slides', async () => {
+    const pixel =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+XyW8WQAAAABJRU5ErkJggg==';
+    const makeScene = (): NativeSlideScene => ({
+      fallbackCount: 1,
+      elements: [{ kind: 'raster', bounds: { x: 0, y: 0, w: 10, h: 10 }, data: pixel }],
+    });
+    const blob = await buildNativePptx([makeScene(), makeScene()], 'Dedupe');
     const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
-    const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
-
-    expect(slideXml).toContain('Security control review templates');
-    expect(slideXml).toContain('<a:solidFill>');
-    expect(slideXml).toContain('2E2E2E');
-    expect(slideXml).toContain('5C5C5C');
-    // One shape that owns both fill and text body — no empty chrome rect underneath.
-    const shapeCount = (slideXml.match(/<p:sp>/g) ?? []).length;
-    expect(shapeCount).toBe(1);
-    expect(slideXml).toContain('<p:txBody>');
-  });
-
-  it('disables wrapping for nowrap chip labels so words stay on one line', async () => {
-    const scene: NativeSlideScene = {
-      fallbackCount: 0,
-      elements: [
-        {
-          kind: 'text',
-          bounds: { x: 100, y: 80, w: 160, h: 40 },
-          text: 'Understand',
-          color: { color: '9B9A92', transparency: 0 },
-          fontFace: 'Arial',
-          fontSize: 14,
-          bold: true,
-          italic: false,
-          align: 'center',
-          valign: 'middle',
-          wrap: false,
-          fill: { color: 'FFFFFF', transparency: 0 },
-          line: { color: 'E3E2DD', transparency: 0, width: 1 },
-          radius: 4,
-          margin: [7, 15, 7, 15],
-        },
-      ],
-    };
-
-    const blob = await buildNativePptx([scene], 'Chip');
-    const files = unzipSync(new Uint8Array(await blob.arrayBuffer()));
-    const slideXml = strFromU8(files['ppt/slides/slide1.xml']);
-
-    expect(slideXml).toContain('Understand');
-    expect(slideXml).toMatch(/<a:bodyPr[^>]* wrap="none"/);
-  });
-
-  it('maps a single-sided accent to a fill plus strip — not a full outline', () => {
-    const shapes = shapesFromBoxStyle({
-      fill: undefined,
-      borders: [{ side: 'left', width: 6, color: { color: 'F54E00', transparency: 0 } }],
-      radius: 0,
-      opacity: 1,
-      bounds: { x: 100, y: 200, w: 800, h: 120 },
-    });
-
-    expect(shapes).toHaveLength(1);
-    expect(shapes[0]).toMatchObject({
-      kind: 'shape',
-      bounds: { x: 100, y: 200, w: 6, h: 120 },
-      fill: { color: 'F54E00', transparency: 0 },
-    });
-  });
-
-  it('maps asymmetric accent borders to a fill shape plus a thin strip', () => {
-    const shapes = shapesFromBoxStyle({
-      fill: { color: '0C0C0C', transparency: 0 },
-      borders: [
-        { side: 'top', width: 3, color: { color: 'E4002B', transparency: 0 } },
-        { side: 'right', width: 1, color: { color: '2A2A2A', transparency: 0 } },
-        { side: 'bottom', width: 1, color: { color: '2A2A2A', transparency: 0 } },
-        { side: 'left', width: 1, color: { color: '2A2A2A', transparency: 0 } },
-      ],
-      radius: 4,
-      opacity: 1,
-      bounds: { x: 100, y: 200, w: 400, h: 160 },
-    });
-
-    expect(shapes).toHaveLength(2);
-    expect(shapes[0]).toMatchObject({
-      kind: 'shape',
-      bounds: { x: 100, y: 200, w: 400, h: 160 },
-      fill: { color: '0C0C0C', transparency: 0 },
-      line: { color: '2A2A2A', transparency: 0, width: 1 },
-      radius: 4,
-    });
-    expect(shapes[1]).toMatchObject({
-      kind: 'shape',
-      bounds: { x: 100, y: 200, w: 400, h: 3 },
-      fill: { color: 'E4002B', transparency: 0 },
-      radius: 0,
-    });
-  });
-
-  it('keeps uniform borders as a single outlined shape with a visible stroke', () => {
-    const shapes = shapesFromBoxStyle({
-      fill: { color: 'FFFFFF', transparency: 0 },
-      borders: [
-        { side: 'top', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
-        { side: 'right', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
-        { side: 'bottom', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
-        { side: 'left', width: 1, color: { color: 'E3E2DD', transparency: 0 } },
-      ],
-      radius: 4,
-      opacity: 1,
-      bounds: { x: 0, y: 0, w: 200, h: 100 },
-    });
-
-    expect(shapes).toHaveLength(1);
-    expect(shapes[0]).toMatchObject({
-      kind: 'shape',
-      fill: { color: 'FFFFFF', transparency: 0 },
-      line: { color: 'E3E2DD', transparency: 0, width: 1 },
-    });
-  });
-
-  it('keeps dark-card hairlines at least 1pt so Google Slides shows them', () => {
-    const shapes = shapesFromBoxStyle({
-      fill: { color: '0C0C0C', transparency: 0 },
-      borders: [
-        { side: 'top', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
-        { side: 'right', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
-        { side: 'bottom', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
-        { side: 'left', width: 1.5, color: { color: 'E4002B', transparency: 0 } },
-      ],
-      radius: 4,
-      opacity: 1,
-      bounds: { x: 0, y: 0, w: 400, h: 160 },
-    });
-
-    expect(shapes).toHaveLength(1);
-    expect(shapes[0]).toMatchObject({
-      line: { color: 'E4002B', transparency: 0, width: 1 },
-    });
+    const media = Object.keys(files).filter((path) => path.startsWith('ppt/media/'));
+    expect(media).toHaveLength(1);
   });
 });

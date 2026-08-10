@@ -114,6 +114,7 @@ export type Locale = {
     exportAsHtml: string;
     exportAsPdf: string;
     exportAsPptx: string;
+    exportAsExactPptx: string;
     pdfExportFailed: string;
     pptxExportFailed: string;
     pdfExportSafariUnsupported: string;
@@ -384,6 +385,21 @@ export type Locale = {
     /** template: "Rendering page {current} of {total}" */
     processing: string;
     generating: string;
+    done: string;
+    /** template: "{count} complex regions kept as images" */
+    fallbacks: string;
+  };
+
+  googleSlidesToast: {
+    title: string;
+    authorizing: string;
+    /** template: "Capturing page {current} of {total}" */
+    capturing: string;
+    /** template: "Uploading image {current} of {total}" */
+    uploading: string;
+    creating: string;
+    notes: string;
+    cleanup: string;
     done: string;
     /** template: "{count} complex regions kept as images" */
     fallbacks: string;

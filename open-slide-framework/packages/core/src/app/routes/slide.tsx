@@ -58,11 +58,13 @@ import { SlideTransitionLayer } from '../components/slide-transition-layer';
 import { type ThumbnailActions, ThumbnailRail } from '../components/thumbnail-rail';
 import { exportSlideAsHtml } from '../lib/export-html';
 import { exportSlideAsPdf, isSafari } from '../lib/export-pdf';
+import { exportSlideAsImagePptx } from '../lib/export-pptx';
 import { exportSlideAsPptx } from '../lib/export-pptx-native';
 import {
   notesWithSessionCache,
   remapNotesSessionCacheAfterReorder,
 } from '../lib/inspector/use-notes';
+import { formatFidelityReport, summarizeScenes } from '../lib/pptx-fidelity/invariants';
 import type { SlideModule } from '../lib/sdk';
 import { usePrefersReducedMotion } from '../lib/use-prefers-reduced-motion';
 import { useSlideModule } from '../lib/use-slide-module';
@@ -458,7 +460,56 @@ export function Slide() {
         ...slide,
         notes: notesWithSessionCache(slideId, slide.notes, pages.length),
       };
-      await exportSlideAsPptx(exportSlide, slideId, (progress) => {
+      const reports = await exportSlideAsPptx(exportSlide, slideId, (progress) => {
+        toast.custom(() => <PptxProgressToast progress={progress} />, {
+          id: toastId,
+          duration: Infinity,
+        });
+      });
+      if (reports.length > 0) {
+        const summary = summarizeScenes(
+          reports.map((report) => ({
+            elements: [],
+            fallbackCount: report.rasterCount,
+            report,
+          })),
+        );
+        console.info('[open-slide] pptx fidelity', formatFidelityReport(summary), summary);
+      }
+    } catch (err) {
+      failed = true;
+      console.error('[open-slide] pptx export failed', err);
+      toast.error(t.slide.pptxExportFailed, { id: toastId, duration: 4000 });
+    } finally {
+      setExporting(false);
+      if (!failed) toast.dismiss(toastId);
+    }
+  };
+
+  const exportExactPptx = async () => {
+    if (!slide || exporting) return;
+    setExporting(true);
+    const toastId = `pptx-exact-export-${slideId}`;
+    toast.custom(
+      () => (
+        <PptxProgressToast
+          progress={{
+            phase: 'processing',
+            current: 0,
+            total: pages.length,
+            percent: 0,
+          }}
+        />
+      ),
+      { id: toastId, duration: Infinity },
+    );
+    let failed = false;
+    try {
+      const exportSlide = {
+        ...slide,
+        notes: notesWithSessionCache(slideId, slide.notes, pages.length),
+      };
+      await exportSlideAsImagePptx(exportSlide, slideId, (progress) => {
         toast.custom(() => <PptxProgressToast progress={progress} />, {
           id: toastId,
           duration: Infinity,
@@ -466,7 +517,7 @@ export function Slide() {
       });
     } catch (err) {
       failed = true;
-      console.error('[open-slide] pptx export failed', err);
+      console.error('[open-slide] exact pptx export failed', err);
       toast.error(t.slide.pptxExportFailed, { id: toastId, duration: 4000 });
     } finally {
       setExporting(false);
@@ -487,6 +538,10 @@ export function Slide() {
       <DropdownMenuItem disabled={exporting} onSelect={exportPptx}>
         <Presentation />
         {t.slide.exportAsPptx}
+      </DropdownMenuItem>
+      <DropdownMenuItem disabled={exporting} onSelect={exportExactPptx}>
+        <Presentation />
+        {t.slide.exportAsExactPptx}
       </DropdownMenuItem>
     </>
   );
