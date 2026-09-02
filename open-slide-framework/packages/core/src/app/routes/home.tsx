@@ -744,8 +744,8 @@ function FolderOption({
       <FolderIconChip icon={icon} />
       <span className="truncate">{label}</span>
       {active && (
-        <span className="ml-auto inline-flex items-center gap-1 text-[10.5px] text-brand">
-          <span className="inline-block size-1 rounded-full bg-brand" aria-hidden />
+        <span className="ml-auto inline-flex items-center gap-1 text-[10.5px] text-accent-blue">
+          <span className="inline-block size-1 rounded-full bg-accent-blue" aria-hidden />
           {tOpt.common.selected}
         </span>
       )}

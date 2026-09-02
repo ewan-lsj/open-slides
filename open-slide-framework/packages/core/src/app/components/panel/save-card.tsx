@@ -99,7 +99,7 @@ export function SaveCard({
           <span className="inline-flex items-center gap-1.5 whitespace-nowrap px-2.5 text-[12px] font-medium text-foreground">
             <span
               aria-hidden
-              className="size-1.5 shrink-0 rounded-full bg-brand shadow-[0_0_0_3px_var(--brand-soft)]"
+              className="size-1.5 shrink-0 rounded-full bg-accent-blue shadow-[0_0_0_3px_var(--brand-soft)]"
             />
             <span className="nums">{unsavedLabel}</span>
           </span>

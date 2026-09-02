@@ -47,7 +47,7 @@ export function SidebarFooter() {
 
   const versionRow = (
     <span className="inline-flex cursor-default items-center gap-1.5">
-      {update?.latest && <span className="size-1.5 rounded-full bg-brand" aria-hidden />}
+      {update?.latest && <span className="size-1.5 rounded-full bg-accent-blue" aria-hidden />}
       {label}
     </span>
   );

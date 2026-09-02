@@ -755,7 +755,7 @@ export function Slide() {
                     ref={slideViewportRef}
                     data-inspector-root
                     data-slide-id={slideId}
-                    className="paper relative min-h-0 min-w-0 flex-1 bg-canvas p-2 md:p-10"
+                    className="relative min-h-0 min-w-0 flex-1 bg-canvas p-2 md:p-10"
                   >
                     <SlideViewportNavigation
                       targetRef={slideViewportRef}
@@ -931,13 +931,13 @@ function ResizableRail(props: {
         onDoubleClick={() => setWidth(DEFAULT_RAIL_WIDTH)}
         className={cn(
           'group/resize absolute inset-y-0 right-0 z-20 w-1.5 translate-x-1/2 cursor-col-resize touch-none outline-none',
-          'focus-visible:bg-brand/20',
+          'focus-visible:bg-accent-blue/20',
         )}
       >
         <span
           aria-hidden
           className={cn(
-            'pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-brand opacity-0 transition-opacity',
+            'pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-accent-blue opacity-0 transition-opacity',
             'group-hover/resize:opacity-100 group-focus-visible/resize:opacity-100',
             resizing && 'opacity-100',
           )}
